@@ -130,7 +130,9 @@ const SettingsScreen = props => {
               description: i18n.t('settings_notification_description'),
               onPress: () =>
                 openPath(
-                  `/u/${encodeURIComponent(username)}/preferences/notifications`,
+                  `/u/${encodeURIComponent(
+                    username,
+                  )}/preferences/notifications`,
                 ),
             })}
           </View>

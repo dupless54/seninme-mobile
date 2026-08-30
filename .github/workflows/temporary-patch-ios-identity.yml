@@ -1,0 +1,31 @@
+name: Temporary iOS Identity Migration
+
+on:
+  push:
+    branches:
+      - feature/seninme-ios-identity-phase-9
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/seninme-ios-identity-phase-9
+
+      - name: Apply iOS identity migration
+        run: python scripts/patch-seninme-ios-identity.py
+
+      - name: Commit migration and remove temporary files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/temporary-patch-ios-identity.yml
+          git rm scripts/patch-seninme-ios-identity.py
+          git add ios/Discourse.xcodeproj/project.pbxproj ios/Discourse/Discourse.entitlements
+          git commit -m "BUILD: isolate Senin.me iOS application identity"
+          git push origin HEAD:feature/seninme-ios-identity-phase-9

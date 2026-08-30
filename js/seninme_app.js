@@ -15,6 +15,9 @@ const isSeninMeUrl = url =>
   url.startsWith(`${siteUrl}?`) ||
   url.startsWith(`${siteUrl}#`);
 
+const isUserApiAuthorizationUrl = url =>
+  url.startsWith(`${siteUrl}/user-api-key/new`);
+
 Discourse.prototype._handleOpenUrl = function (event) {
   if (
     event &&
@@ -31,7 +34,11 @@ Discourse.prototype._handleOpenUrl = function (event) {
 };
 
 Discourse.prototype.openUrl = function (url) {
-  if (typeof url === 'string' && isSeninMeUrl(url)) {
+  if (
+    typeof url === 'string' &&
+    isSeninMeUrl(url) &&
+    !isUserApiAuthorizationUrl(url)
+  ) {
     this._navigation.navigate('WebView', { url });
     return;
   }

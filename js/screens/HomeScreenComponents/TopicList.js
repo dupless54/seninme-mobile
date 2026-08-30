@@ -1,7 +1,7 @@
 /* @flow */
 'use strict';
 
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   FlatList,
   StyleSheet,
@@ -19,10 +19,6 @@ const TopicList = props => {
   const [loadCompleted, setLoadCompleted] = useState(false);
   const [topics, setTopics] = useState([]);
   const [categories, setCategories] = useState([]);
-
-  const endpoint = '/hot';
-  const siteQuery = `${props.site.url}/site.json`;
-  const listQuery = `${props.site.url}${endpoint}.json`;
 
   const numberOfTopics = 10;
 
@@ -64,7 +60,7 @@ const TopicList = props => {
       paddingRight: props.largeLayout ? 20 : 0,
       marginLeft: props.largeLayout ? 30 : 0,
     },
-    emmptyItemsText: {
+    emptyItemsText: {
       marginLeft: props.largeLayout ? 30 : 0,
     },
     metadataFirstRow: {
@@ -95,51 +91,67 @@ const TopicList = props => {
     },
   });
 
-  if (!loadCompleted) {
-    fetch(siteQuery)
+  useEffect(() => {
+    let active = true;
+    const siteUrl = props.site.url;
+
+    setLoadCompleted(false);
+
+    fetch(`${siteUrl}/site.json`)
       .then(res => res.json())
       .then(siteJson => {
-        if (siteJson.categories) {
-          setCategories(siteJson.categories);
+        if (!active) {
+          return null;
         }
-        fetch(listQuery)
-          .then(res => res.json())
-          .then(json => {
-            const jsonTopics = json.topic_list.topics;
-            if (jsonTopics) {
-              setLoadCompleted(true);
-              setTopics(
-                jsonTopics
-                  .filter(o => o.pinned === false)
-                  .slice(0, numberOfTopics),
-              );
-            }
-          })
-          .catch(e => {
-            setLoadCompleted(true);
-            console.log('Error fetching listQuery:', e);
-          });
+
+        setCategories(siteJson.categories || []);
+        return fetch(`${siteUrl}/hot.json`);
+      })
+      .then(res => (res ? res.json() : null))
+      .then(json => {
+        if (!active || !json) {
+          return;
+        }
+
+        const jsonTopics = json.topic_list?.topics || [];
+        setTopics(
+          jsonTopics.filter(topic => topic.pinned === false).slice(0, numberOfTopics),
+        );
       })
       .catch(e => {
-        setLoadCompleted(true);
-        console.log('Error fetching siteQuery:', e);
+        if (active) {
+          console.log('Error fetching hot topics:', e);
+          setTopics([]);
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setLoadCompleted(true);
+        }
       });
-  }
+
+    return () => {
+      active = false;
+    };
+  }, [props.site.url, props.refreshKey]);
 
   function _renderItems() {
-    if (topics && topics.length === 0) {
+    if (topics.length === 0) {
       return (
         <View style={styles.itemsContainer}>
-          <Text style={{ ...styles.emmptyItemsText, color: theme.grayTitle }}>
+          <Text style={{ ...styles.emptyItemsText, color: theme.grayTitle }}>
             {i18n.t('no_hot_topics')}
           </Text>
         </View>
       );
     }
+
     return (
       <View style={styles.itemsContainer}>
         <FlatList
           data={topics}
+          keyExtractor={item => `topic-${item.id}`}
+          scrollEnabled={false}
           renderItem={({ item, index }) => _renderTopic(item, index)}
         />
       </View>
@@ -149,18 +161,6 @@ const TopicList = props => {
   function _renderPlaceholder() {
     return (
       <View style={styles.placeholder}>
-        <View
-          style={{
-            ...styles.placeholderHeading,
-            backgroundColor: theme.grayUILight,
-          }}
-        />
-        <View
-          style={{
-            ...styles.placeholderMetadata,
-            backgroundColor: theme.grayUILight,
-          }}
-        />
         <View
           style={{
             ...styles.placeholderHeading,
@@ -210,51 +210,42 @@ const TopicList = props => {
         style={{
           ...styles.topicRow,
           borderBottomWidth:
-            index === numberOfTopics - 1 ? 0 : StyleSheet.hairlineWidth,
+            index === topics.length - 1 ? 0 : StyleSheet.hairlineWidth,
           borderBottomColor: theme.grayBorder,
-          paddingBottom: index === numberOfTopics - 1 ? 0 : 15,
+          paddingBottom: index === topics.length - 1 ? 0 : 15,
         }}
       >
         <View>
-          <View>
-            <Text style={{ ...styles.topicTitle, color: theme.grayTitle }}>
-              {item.unicode_title || item.title}
-            </Text>
-          </View>
+          <Text style={{ ...styles.topicTitle, color: theme.grayTitle }}>
+            {item.unicode_title || item.title}
+          </Text>
           {item.ai_topic_gist && (
-            <View>
-              <Text style={{ ...styles.topicGist, color: theme.grayTitle }}>
-                {item.ai_topic_gist}
-              </Text>
-            </View>
+            <Text style={{ ...styles.topicGist, color: theme.grayTitle }}>
+              {item.ai_topic_gist}
+            </Text>
           )}
           <View style={styles.metadataFirstRow}>
             {_renderCategory(item.category_id)}
-            <View style={{ ...styles.topicCounts }}>
+            <View style={styles.topicCounts}>
               <FontAwesome5
-                name={'reply'}
+                name="reply"
                 size={13}
                 color={theme.grayUI}
                 style={{ opacity: 0.75 }}
                 iconStyle="solid"
               />
               <Text style={{ ...styles.topicCountsNum, color: theme.grayUI }}>
-                {item.posts_count - 1}
+                {Math.max(0, item.posts_count - 1)}
               </Text>
               <FontAwesome5
-                name={'heart'}
+                name="heart"
                 size={13}
                 color={theme.grayUI}
                 style={{ opacity: 0.75 }}
                 iconStyle="solid"
               />
-              <Text
-                style={{
-                  ...styles.topicCountsNum,
-                  color: theme.grayUI,
-                }}
-              >
-                {item.like_count}
+              <Text style={{ ...styles.topicCountsNum, color: theme.grayUI }}>
+                {item.like_count || 0}
               </Text>
             </View>
           </View>
@@ -265,25 +256,25 @@ const TopicList = props => {
 
   function _renderCategory(categoryId) {
     const category = categories.find(o => o.id === categoryId);
-    if (category) {
-      return (
-        <View style={{ ...styles.categoryBadge }}>
-          <View
-            style={{
-              ...styles.categoryPill,
-              backgroundColor: '#' + category.color,
-            }}
-          />
-          <Text style={{ color: theme.grayTitle }}>{category.name}</Text>
-        </View>
-      );
+    if (!category) {
+      return <Text />;
     }
-    return <Text />;
+
+    return (
+      <View style={styles.categoryBadge}>
+        <View
+          style={{
+            ...styles.categoryPill,
+            backgroundColor: `#${category.color}`,
+          }}
+        />
+        <Text style={{ color: theme.grayTitle }}>{category.name}</Text>
+      </View>
+    );
   }
 
   function _openTopic(item) {
-    const topicUrl = `/t/${item.slug}/${item.id}`;
-    props.onClickTopic(topicUrl);
+    props.onClickTopic(`/t/${item.slug}/${item.id}`);
   }
 
   return (

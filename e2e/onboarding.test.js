@@ -49,4 +49,11 @@ describe.each([['en'], ['fr']])(`Single-site shell (locale: %s)`, locale => {
     await element(by.text(i18n.t('home'))).tap();
     await expect(element(by.id('seninme-home-feed'))).toBeVisible();
   });
+
+  it('should expose Senin.me settings on both platforms', async () => {
+    await element(by.id('nav-settings-icon')).tap();
+    await expect(element(by.id('seninme-settings-screen'))).toBeVisible();
+    await expect(element(by.id('seninme-settings-privacy'))).toBeVisible();
+    await expect(element(by.id('seninme-settings-connect'))).toBeVisible();
+  });
 });

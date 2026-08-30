@@ -53,7 +53,10 @@ const SettingsScreen = props => {
       ]}
     >
       <View
-        style={[styles.iconContainer, { backgroundColor: theme.grayBackground }]}
+        style={[
+          styles.iconContainer,
+          { backgroundColor: theme.grayBackground },
+        ]}
       >
         <FontAwesome5
           name={icon}

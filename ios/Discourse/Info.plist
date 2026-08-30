@@ -38,26 +38,6 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>700</string>
-	<key>Fabric</key>
-	<dict>
-		<key>APIKey</key>
-		<string>f1fad9d488bbe6a5a5434d2511423aae3aa653d2</string>
-		<key>Kits</key>
-		<array>
-			<dict>
-				<key>KitInfo</key>
-				<dict/>
-				<key>KitName</key>
-				<string>Answers</string>
-			</dict>
-			<dict>
-				<key>KitInfo</key>
-				<dict/>
-				<key>KitName</key>
-				<string>Crashlytics</string>
-			</dict>
-		</array>
-	</dict>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSApplicationQueriesSchemes</key>
@@ -92,7 +72,7 @@
 	<string>Senin.me uses your photo library when you choose images to upload to posts.</string>
 	<key>NSUserActivityTypes</key>
 	<array>
-		<string>org.discourse.DiscourseApp.SiriShortcut</string>
+		<string>me.senin.mobile.SiriShortcut</string>
 	</array>
 	<key>RCTNewArchEnabled</key>
 	<true/>

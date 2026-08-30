@@ -2,7 +2,7 @@
 //  ShareViewController.swift
 //  ShareExtension
 //
-//  Sends shared URLs and text links to the Senin.me app.
+//  Sends shared URLs and text to the Senin.me app.
 //
 
 import MobileCoreServices
@@ -45,16 +45,16 @@ class ShareViewController: UIViewController {
                 if attachment.isUrl {
                     attachment.processUrl { [weak self] object, error in
                         guard error == nil, let url = object as? URL else { return }
-                        self?.openInSeninMe(url)
+                        self?.openInSeninMe(url.absoluteString)
                     }
                 } else if attachment.isText {
                     attachment.processText { [weak self] object, error in
                         guard error == nil,
                               let text = object as? String,
-                              let url = URL(string: text) else {
+                              !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                             return
                         }
-                        self?.openInSeninMe(url)
+                        self?.openInSeninMe(text)
                     }
                 }
             }
@@ -76,12 +76,12 @@ class ShareViewController: UIViewController {
         )
     }
 
-    private func openInSeninMe(_ sharedUrl: URL) {
+    private func openInSeninMe(_ sharedContent: String) {
         var components = URLComponents()
         components.scheme = "seninme"
         components.host = "share"
         components.queryItems = [
-            URLQueryItem(name: "sharedUrl", value: sharedUrl.absoluteString)
+            URLQueryItem(name: "sharedUrl", value: sharedContent)
         ]
 
         guard let appUrl = components.url else { return }

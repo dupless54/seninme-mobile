@@ -119,17 +119,13 @@ class HomeScreen extends React.Component {
     this._siteManager.unsubscribe(this._onChangeSites);
   }
 
-  onChangeSites(e) {
-    if (this._siteManager.isLoading() !== this.state.loadingSites) {
-      this.setState({ loadingSites: this._siteManager.isLoading() });
-    }
-    if (e && e.event) {
-      this.setState({
-        data: this._siteManager.listSites(),
-        hotTopicsHidden: this._siteManager.hotTopicsHidden,
-        siteURLsHidden: this._siteManager.siteURLsHidden,
-      });
-    }
+  onChangeSites() {
+    this.setState({
+      data: this._siteManager.listSites(),
+      hotTopicsHidden: this._siteManager.hotTopicsHidden,
+      loadingSites: this._siteManager.isLoading(),
+      siteURLsHidden: this._siteManager.siteURLsHidden,
+    });
   }
 
   async pullDownToRefresh() {

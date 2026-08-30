@@ -28,5 +28,13 @@ export default [
       },
     },
   },
-  { ignores: ['lib/*', 'react-native.config.js', '.*', '*.config.js'] },
+  {
+    ignores: [
+      'lib/*',
+      'scripts/*.cjs',
+      'react-native.config.js',
+      '.*',
+      '*.config.js',
+    ],
+  },
 ];

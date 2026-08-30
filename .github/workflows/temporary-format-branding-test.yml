@@ -1,0 +1,43 @@
+name: Temporary Branding Formatter
+
+on:
+  push:
+    branches:
+      - feature/seninme-branding-phase-11
+    paths:
+      - .github/workflows/temporary-format-branding-test.yml
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/seninme-branding-phase-11
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn
+
+      - name: Format branding regression test
+        run: yarn prettier --write js/__tests__/branding_identity.test.js
+
+      - name: Commit exact formatting and remove temporary workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "dupless54"
+          git config user.email "126967564+dupless54@users.noreply.github.com"
+          git rm .github/workflows/temporary-format-branding-test.yml
+          git add js/__tests__/branding_identity.test.js
+          git commit -m "STYLE: apply exact branding test formatting"
+          git push origin HEAD:feature/seninme-branding-phase-11

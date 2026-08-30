@@ -27,6 +27,24 @@ project, style_count = re.subn(
 if style_count != 4:
     raise SystemExit(f"Unexpected manual signing count: {style_count}")
 
+project, target_team_count = re.subn(
+    r"^(\s*)DevelopmentTeam = 6T3LU73T8S;$",
+    "",
+    project,
+    flags=re.MULTILINE,
+)
+if target_team_count != 2:
+    raise SystemExit(f"Unexpected target attribute team count: {target_team_count}")
+
+project, target_style_count = re.subn(
+    r"^(\s*)ProvisioningStyle = Manual;$",
+    r"\1ProvisioningStyle = Automatic;",
+    project,
+    flags=re.MULTILINE,
+)
+if target_style_count != 2:
+    raise SystemExit(f"Unexpected target provisioning style count: {target_style_count}")
+
 project, team_count = re.subn(
     r'^\s*"?DEVELOPMENT_TEAM(?:\[sdk=iphoneos\*\])?"? = 6T3LU73T8S;\n',
     "",

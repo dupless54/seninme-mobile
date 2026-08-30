@@ -129,5 +129,21 @@
   "home_chat": "Chat",
   "home_trending": "Trending now",
   "home_trending_description": "Topics getting attention across the community.",
-  "home_see_all": "See all"
+  "home_see_all": "See all",
+  "settings_description": "Manage your Senin.me account and community preferences.",
+  "settings_account_section": "Account",
+  "settings_profile": "Profile",
+  "settings_account": "Account settings",
+  "settings_account_description": "Manage your account details and security settings.",
+  "settings_notification_preferences": "Notification preferences",
+  "settings_notification_description": "Choose which Senin.me notifications you receive.",
+  "settings_connect_title": "Connect your Senin.me account",
+  "settings_connect_description": "Sign in from Home to unlock your profile, account settings and personalized notifications.",
+  "settings_connect_action": "Go to Home",
+  "settings_community_section": "Community",
+  "settings_privacy": "Privacy",
+  "settings_terms": "Terms of Service",
+  "settings_about": "About Senin.me",
+  "settings_appearance_section": "Appearance",
+  "settings_version": "Senin.me %{version} (%{build})"
 }

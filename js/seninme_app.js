@@ -15,10 +15,7 @@ Discourse.prototype._handleOpenUrl = function (event) {
   ) {
     return originalHandleOpenUrl.call(this, {
       ...event,
-      url: event.url.replace(
-        `${APP_CONFIG.customScheme}://`,
-        'discourse://',
-      ),
+      url: event.url.replace(`${APP_CONFIG.customScheme}://`, 'discourse://'),
     });
   }
 

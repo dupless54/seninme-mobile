@@ -29,25 +29,49 @@ When the Senin.me push gateway is ready:
 
 ## App identity
 
-Current foundation values:
+Current values:
 
 - App name: `Senin.me`
 - Site URL: `https://senin.me`
+- Android application ID: `me.senin.mobile`
 - URL scheme: `seninme`
 - Auth callback: `seninme://auth_redirect`
 
-The native Android application ID and iOS bundle identifier are intentionally left for a dedicated follow-up change because they affect signing, Firebase configuration, App Store Connect, Google Play, share extensions, and other native targets.
+The iOS bundle identifier and Apple Team/provisioning values still require the Senin.me Apple Developer signing configuration before they can be finalized safely.
+
+## Deep links and sharing
+
+The native shell accepts only these Senin.me custom-scheme routes:
+
+- `seninme://auth_redirect` for User API Key authentication.
+- `seninme://open?url=...` for URLs whose origin is exactly `https://senin.me`.
+- `seninme://share?sharedUrl=...` for opening shared URLs or text in a Senin.me new-topic composer.
+
+Unknown custom-scheme routes are ignored. External HTTP(S) URLs never fall through to the upstream multi-site add flow.
+
+### Android App Links
+
+Android declares a verified App Link for `https://senin.me`. Verification requires Senin.me to serve:
+
+`https://senin.me/.well-known/assetlinks.json`
+
+The file must authorize package `me.senin.mobile` using the SHA-256 fingerprint of the final Play/App signing certificate. Do not publish a placeholder fingerprint.
+
+### iOS Universal Links
+
+iOS is scoped to the `senin.me` associated domain. Universal Links require Senin.me to serve a valid Apple App Site Association file for the final Apple Team ID and bundle identifier. Finalize this only after the Senin.me Apple Developer signing identity is known.
 
 ## Validation
 
-Pull requests should pass the repository's linting and test workflows before being merged. Forks may require GitHub Actions to be explicitly enabled before pull-request workflow runs are created.
+Pull requests should pass the repository's linting, Jest, Android build, and iOS workflows before being merged. Forks may require GitHub Actions to be explicitly enabled before pull-request workflow runs are created.
 
 ## Upstream strategy
 
-Senin.me-specific runtime behavior is isolated in:
+Senin.me-specific runtime behavior is isolated primarily in:
 
 - `js/app_config.js`
 - `js/seninme_bootstrap.js`
 - `js/seninme_app.js`
+- `js/seninme_links.js`
 
-This keeps the original DiscourseMobile implementation as close to upstream as possible and makes future upstream synchronization easier.
+This keeps the original DiscourseMobile implementation as close to upstream as practical and makes future upstream synchronization easier.

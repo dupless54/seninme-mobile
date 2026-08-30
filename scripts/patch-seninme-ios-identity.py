@@ -62,7 +62,7 @@ project, identity_count = re.subn(
     project,
     flags=re.MULTILINE,
 )
-if identity_count != 6:
+if identity_count != 7:
     raise SystemExit(f"Unexpected explicit code signing identity count: {identity_count}")
 
 for forbidden in (

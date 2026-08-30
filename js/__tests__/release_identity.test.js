@@ -5,10 +5,7 @@ import fs from 'fs';
 import path from 'path';
 
 const repoRoot = path.resolve(__dirname, '../..');
-const fastfile = fs.readFileSync(
-  path.join(repoRoot, 'fastlane/Fastfile'),
-  'utf8',
-);
+const fastfile = fs.readFileSync(path.join(repoRoot, 'fastlane/Fastfile'), 'utf8');
 const matchfile = fs.readFileSync(
   path.join(repoRoot, 'fastlane/Matchfile'),
   'utf8',

@@ -7,6 +7,7 @@ import DebugRow from './DebugRow';
 import NavigationBar from './NavigationBar';
 import Notification from './Notification';
 import SingleSiteHome from './SingleSiteHome';
+import SingleSiteRecovery from './SingleSiteRecovery';
 
 module.exports = {
   OnBoardingView: OnBoardingView,
@@ -15,4 +16,5 @@ module.exports = {
   NavigationBar: NavigationBar,
   Notification: Notification,
   SingleSiteHome: SingleSiteHome,
+  SingleSiteRecovery: SingleSiteRecovery,
 };

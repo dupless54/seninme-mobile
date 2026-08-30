@@ -6,15 +6,9 @@
 	<string>development</string>
 	<key>com.apple.developer.associated-domains</key>
 	<array>
-		<string>applinks:meta.discourse.org</string>
-		<string>applinks:ask.discourse.com</string>
-		<string>applinks:discourse.group</string>
-		<string>activitycontinuation:meta.discourse.org</string>
-		<string>activitycontinuation:ask.discourse.com</string>
-		<string>activitycontinuation:discourse.group</string>
-		<string>webcredentials:meta.discourse.org</string>
-		<string>webcredentials:ask.discourse.com</string>
-		<string>webcredentials:discourse.group</string>
+		<string>applinks:senin.me</string>
+		<string>activitycontinuation:senin.me</string>
+		<string>webcredentials:senin.me</string>
 	</array>
 	<key>com.apple.developer.icloud-container-identifiers</key>
 	<array/>

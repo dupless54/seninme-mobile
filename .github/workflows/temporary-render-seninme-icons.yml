@@ -20,15 +20,16 @@ jobs:
         with:
           ref: feature/seninme-branding-phase-11
 
+      - name: Install SVG renderer
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y librsvg2-bin
+
       - name: Render Senin.me app icons
         shell: bash
         run: |
           set -euo pipefail
-          renderer="$(command -v magick || command -v convert || true)"
-          if [ -z "$renderer" ]; then
-            echo "ImageMagick is not available on this runner" >&2
-            exit 1
-          fi
 
           icon_dir="ios/Discourse/Images.xcassets/AppIcon.appiconset"
           normal_svg="branding/seninme-app-icon.svg"
@@ -38,9 +39,9 @@ jobs:
           sed 's/#9D1B2C/#1A0A0E/g; s/#FFFFFF/#F6EFF1/g' "$normal_svg" > "$dark_svg"
           sed 's/#9D1B2C/#E6E6E6/g; s/#FFFFFF/#222222/g' "$normal_svg" > "$tinted_svg"
 
-          "$renderer" -background none "$normal_svg" -resize 1024x1024 "$icon_dir/seninme.png"
-          "$renderer" -background none "$dark_svg" -resize 1024x1024 "$icon_dir/seninme_dark.png"
-          "$renderer" -background none "$tinted_svg" -resize 1024x1024 "$icon_dir/seninme_tinted.png"
+          rsvg-convert -w 1024 -h 1024 "$normal_svg" -o "$icon_dir/seninme.png"
+          rsvg-convert -w 1024 -h 1024 "$dark_svg" -o "$icon_dir/seninme_dark.png"
+          rsvg-convert -w 1024 -h 1024 "$tinted_svg" -o "$icon_dir/seninme_tinted.png"
 
           python - <<'PY'
           import json
@@ -48,11 +49,11 @@ jobs:
           from pathlib import Path
 
           icon_dir = Path("ios/Discourse/Images.xcassets/AppIcon.appiconset")
-          expected = {
-              "seninme.png": None,
-              "seninme_dark.png": "dark",
-              "seninme_tinted.png": "tinted",
-          }
+          expected = (
+              "seninme.png",
+              "seninme_dark.png",
+              "seninme_tinted.png",
+          )
 
           for filename in expected:
               raw = (icon_dir / filename).read_bytes()

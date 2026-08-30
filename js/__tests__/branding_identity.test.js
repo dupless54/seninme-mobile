@@ -52,11 +52,7 @@ describe('Senin.me application branding', () => {
   });
 
   test('ships Senin.me iOS app icons in every supported appearance', () => {
-    const filenames = [
-      'seninme.png',
-      'seninme_dark.png',
-      'seninme_tinted.png',
-    ];
+    const filenames = ['seninme.png', 'seninme_dark.png', 'seninme_tinted.png'];
 
     expect(appIconContents).not.toContain('discourse');
 

@@ -38,6 +38,7 @@ class HomeScreen extends React.Component {
       selectedTabIndex: 0,
       hotTopicsHidden: false,
       siteURLsHidden: false,
+      feedRefreshKey: 0,
     };
 
     this._onChangeSites = e => this.onChangeSites(e);
@@ -59,15 +60,13 @@ class HomeScreen extends React.Component {
         this.props.screenProps.openUrl(
           `${site.url}/session/otp/${site.oneTimePassword}`,
         );
+      } else if (Platform.OS === 'ios') {
+        const params = await this._siteManager.generateURLParams(site);
+        this.props.screenProps.openUrl(`${site.url}${endpoint}?${params}`);
       } else {
-        if (Platform.OS === 'ios') {
-          const params = await this._siteManager.generateURLParams(site);
-          this.props.screenProps.openUrl(`${site.url}${endpoint}?${params}`);
-        } else {
-          this.props.screenProps.openUrl(
-            `${site.url}${endpoint}?discourse_app=1`,
-          );
-        }
+        this.props.screenProps.openUrl(
+          `${site.url}${endpoint}?discourse_app=1`,
+        );
       }
       return;
     }
@@ -95,7 +94,7 @@ class HomeScreen extends React.Component {
       return;
     }
 
-    const shortcutOptions = {
+    donateShortcut({
       activityType: 'me.senin.mobile.SiriShortcut',
       keywords: ['seninme', 'community', 'forum', site.title],
       persistentIdentifier: 'SeninMeShortcut',
@@ -108,9 +107,7 @@ class HomeScreen extends React.Component {
         siteUrl: site.url,
       },
       requiredUserInfoKeys: ['siteUrl'],
-    };
-
-    donateShortcut(shortcutOptions);
+    });
   }
 
   componentDidMount() {
@@ -142,7 +139,10 @@ class HomeScreen extends React.Component {
     } catch (e) {
       console.log(e);
     } finally {
-      this.setState({ isRefreshing: false });
+      this.setState(state => ({
+        isRefreshing: false,
+        feedRefreshKey: state.feedRefreshKey + 1,
+      }));
     }
   }
 
@@ -160,7 +160,6 @@ class HomeScreen extends React.Component {
     }
 
     const theme = this.context;
-
     const publicSiteCount = this._siteManager.sites.filter(
       site => site.loginRequired === false,
     ).length;
@@ -229,6 +228,7 @@ class HomeScreen extends React.Component {
     return (
       <Components.SingleSiteHome
         site={site}
+        refreshKey={this.state.feedRefreshKey}
         onOpen={(endpoint = '', options = {}) =>
           this.visitSite(site, false, endpoint, options)
         }

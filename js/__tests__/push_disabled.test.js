@@ -39,7 +39,12 @@ describe('Senin.me disabled push policy', () => {
   test('does not initialize Firebase Messaging while push is disabled', () => {
     expect(firebaseAdapter).not.toContain("from '@react-native-firebase/app'");
     expect(firebaseAdapter).not.toContain("'@react-native-firebase/messaging'");
-    expect(reactNativeConfig.match(/android: null/g) || []).toHaveLength(3);
+    expect(reactNativeConfig).toMatch(
+      /'@react-native-firebase\/app':[\s\S]*?android: null,[\s\S]*?ios: null/,
+    );
+    expect(reactNativeConfig).toMatch(
+      /'@react-native-firebase\/messaging':[\s\S]*?android: null,[\s\S]*?ios: null/,
+    );
     expect(androidRootGradle).not.toContain('com.google.gms:google-services');
     expect(androidAppGradle).not.toContain('com.google.gms.google-services');
   });

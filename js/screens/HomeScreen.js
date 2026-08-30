@@ -146,6 +146,10 @@ class HomeScreen extends React.Component {
     }
   }
 
+  retryConfiguredSite() {
+    return this._siteManager.retryConfiguredSite();
+  }
+
   shouldDisplayOnBoarding() {
     return (
       this._siteManager.sites.length === 0 &&
@@ -247,12 +251,26 @@ class HomeScreen extends React.Component {
 
   _renderSites() {
     const theme = this.context;
+
+    if (APP_CONFIG.singleSite && this.state.loadingSites) {
+      return <Components.SingleSiteRecovery loading={true} />;
+    }
+
     if (this.state.loadingSites) {
       return <View style={{ flex: 1 }} />;
     }
 
     if (APP_CONFIG.singleSite && this.state.data.length > 0) {
       return this._renderSingleSiteHome(this.state.data[0]);
+    }
+
+    if (APP_CONFIG.singleSite) {
+      return (
+        <Components.SingleSiteRecovery
+          loading={false}
+          onRetry={() => this.retryConfiguredSite()}
+        />
+      );
     }
 
     if (this.shouldDisplayOnBoarding()) {

@@ -24,7 +24,7 @@ const QUICK_ACTIONS = [
   },
   {
     key: 'new',
-    icon: 'sparkles',
+    icon: 'plus-circle',
     endpoint: '/new',
     label: 'home_new',
     requiresAuth: true,
@@ -68,12 +68,12 @@ export default function SingleSiteHome({ site, onOpen, onConnect, refreshing }) 
       contentContainerStyle={styles.content}
       refreshControl={refreshing}
     >
-      <View style={[styles.hero, { backgroundColor: theme.background }]}> 
-        <Text style={[styles.eyebrow, { color: theme.blueCallToAction }]}> 
+      <View style={[styles.hero, { backgroundColor: theme.background }]}>
+        <Text style={[styles.eyebrow, { color: theme.blueCallToAction }]}>
           {i18n.t('home_community_label')}
         </Text>
         <Text style={[styles.title, { color: theme.grayTitle }]}>Senin.me</Text>
-        <Text style={[styles.subtitle, { color: theme.graySubtitle }]}> 
+        <Text style={[styles.subtitle, { color: theme.graySubtitle }]}>
           {i18n.t('home_feed_description')}
         </Text>
 
@@ -103,7 +103,7 @@ export default function SingleSiteHome({ site, onOpen, onConnect, refreshing }) 
       </View>
 
       <View style={styles.actionsSection}>
-        <Text style={[styles.sectionTitle, { color: theme.grayTitle }]}> 
+        <Text style={[styles.sectionTitle, { color: theme.grayTitle }]}>
           {i18n.t('home_quick_access')}
         </Text>
         <View style={styles.actionsGrid}>
@@ -134,7 +134,7 @@ export default function SingleSiteHome({ site, onOpen, onConnect, refreshing }) 
                   iconStyle="solid"
                 />
               </View>
-              <Text style={[styles.actionLabel, { color: theme.grayTitle }]}> 
+              <Text style={[styles.actionLabel, { color: theme.grayTitle }]}>
                 {i18n.t(action.label)}
               </Text>
             </TouchableOpacity>
@@ -152,11 +152,11 @@ export default function SingleSiteHome({ site, onOpen, onConnect, refreshing }) 
         ]}
       >
         <View style={styles.feedHeader}>
-          <View>
-            <Text style={[styles.sectionTitle, { color: theme.grayTitle }]}> 
+          <View style={styles.feedHeading}>
+            <Text style={[styles.sectionTitle, { color: theme.grayTitle }]}>
               {i18n.t('home_trending')}
             </Text>
-            <Text style={[styles.sectionSubtitle, { color: theme.graySubtitle }]}> 
+            <Text style={[styles.sectionSubtitle, { color: theme.graySubtitle }]}>
               {i18n.t('home_trending_description')}
             </Text>
           </View>
@@ -165,7 +165,7 @@ export default function SingleSiteHome({ site, onOpen, onConnect, refreshing }) 
             activeOpacity={0.7}
             onPress={() => onOpen('/hot')}
           >
-            <Text style={[styles.seeAll, { color: theme.blueCallToAction }]}> 
+            <Text style={[styles.seeAll, { color: theme.blueCallToAction }]}>
               {i18n.t('home_see_all')}
             </Text>
           </TouchableOpacity>
@@ -276,10 +276,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 16,
   },
+  feedHeading: {
+    flex: 1,
+    paddingRight: 12,
+  },
   seeAll: {
     fontSize: 14,
     fontWeight: '600',
-    paddingLeft: 12,
     paddingTop: 3,
   },
 });

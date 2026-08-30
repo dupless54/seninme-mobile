@@ -80,8 +80,6 @@ class HomeScreen extends React.Component {
 
         if (requestAuthURL) {
           this.props.screenProps.openUrl(requestAuthURL);
-        } else {
-          // TODO: auth got cancelled or error, show a message?
         }
         this.setState({ authProcessActive: false });
       } else {
@@ -98,7 +96,6 @@ class HomeScreen extends React.Component {
     }
 
     const shortcutOptions = {
-      // This activity type needs to be set in `NSUserActivityTypes` on the Info.plist
       activityType: 'me.senin.mobile.SiriShortcut',
       keywords: ['seninme', 'community', 'forum', site.title],
       persistentIdentifier: 'SeninMeShortcut',
@@ -226,10 +223,36 @@ class HomeScreen extends React.Component {
     this.setState({ data: data, refreshingEnabled: true });
   }
 
+  _renderSingleSiteHome(site) {
+    const theme = this.context;
+
+    return (
+      <Components.SingleSiteHome
+        site={site}
+        onOpen={(endpoint = '', options = {}) =>
+          this.visitSite(site, false, endpoint, options)
+        }
+        onConnect={() => this.visitSite(site, true)}
+        refreshing={
+          <RefreshControl
+            refreshing={this.state.isRefreshing}
+            onRefresh={() => this.pullDownToRefresh()}
+            title={i18n.t('loading')}
+            titleColor={theme.graySubtitle}
+          />
+        }
+      />
+    );
+  }
+
   _renderSites() {
     const theme = this.context;
     if (this.state.loadingSites) {
       return <View style={{ flex: 1 }} />;
+    }
+
+    if (APP_CONFIG.singleSite && this.state.data.length > 0) {
+      return this._renderSingleSiteHome(this.state.data[0]);
     }
 
     if (this.shouldDisplayOnBoarding()) {
@@ -240,38 +263,38 @@ class HomeScreen extends React.Component {
           )}
         </BottomTabBarHeightContext.Consumer>
       );
-    } else {
-      return (
-        <BottomTabBarHeightContext.Consumer>
-          {tabBarHeight => (
-            <View style={{ flex: 1 }}>
-              {this._renderTopicListToggle()}
-              <DraggableFlatList
-                ref={ref => {
-                  this.dragListRef = ref;
-                }}
-                contentContainerStyle={{ paddingBottom: tabBarHeight + 20 }}
-                activationDistance={20}
-                data={this.state.data}
-                renderItem={item => this._renderItem(item)}
-                keyExtractor={item => `d-item-${item.url}`}
-                onDragBegin={() => this.setState({ refreshingEnabled: false })}
-                onDragEnd={({ data }) => this.onReordered(data)}
-                refreshControl={
-                  <RefreshControl
-                    enabled={this.state.refreshingEnabled}
-                    refreshing={this.state.isRefreshing}
-                    onRefresh={() => this.pullDownToRefresh()}
-                    title={i18n.t('loading')}
-                    titleColor={theme.graySubtitle}
-                  />
-                }
-              />
-            </View>
-          )}
-        </BottomTabBarHeightContext.Consumer>
-      );
     }
+
+    return (
+      <BottomTabBarHeightContext.Consumer>
+        {tabBarHeight => (
+          <View style={{ flex: 1 }}>
+            {this._renderTopicListToggle()}
+            <DraggableFlatList
+              ref={ref => {
+                this.dragListRef = ref;
+              }}
+              contentContainerStyle={{ paddingBottom: tabBarHeight + 20 }}
+              activationDistance={20}
+              data={this.state.data}
+              renderItem={item => this._renderItem(item)}
+              keyExtractor={item => `d-item-${item.url}`}
+              onDragBegin={() => this.setState({ refreshingEnabled: false })}
+              onDragEnd={({ data }) => this.onReordered(data)}
+              refreshControl={
+                <RefreshControl
+                  enabled={this.state.refreshingEnabled}
+                  refreshing={this.state.isRefreshing}
+                  onRefresh={() => this.pullDownToRefresh()}
+                  title={i18n.t('loading')}
+                  titleColor={theme.graySubtitle}
+                />
+              }
+            />
+          </View>
+        )}
+      </BottomTabBarHeightContext.Consumer>
+    );
   }
 
   onDidPressAndroidSettingsIcon() {
@@ -286,41 +309,39 @@ class HomeScreen extends React.Component {
     const theme = this.context;
 
     return (
-      <>
-        <SafeAreaView
-          style={[styles.container, { backgroundColor: theme.background }]}
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: theme.background }]}
+      >
+        <Components.NavigationBar
+          onDidPressBrand={() =>
+            this.props.screenProps.openUrl(APP_CONFIG.defaultSiteUrl)
+          }
+          onDidPressAndroidSettingsIcon={() =>
+            this.onDidPressAndroidSettingsIcon()
+          }
+          onDidPressPlusIcon={() => this.onDidPressPlusIcon()}
+        />
+        <View
+          style={[
+            styles.sitesContainer,
+            {
+              backgroundColor: theme.grayBackground,
+            },
+          ]}
         >
-          <Components.NavigationBar
-            onDidPressBrand={() =>
-              this.props.screenProps.openUrl(APP_CONFIG.defaultSiteUrl)
-            }
-            onDidPressAndroidSettingsIcon={() =>
-              this.onDidPressAndroidSettingsIcon()
-            }
-            onDidPressPlusIcon={() => this.onDidPressPlusIcon()}
-          />
+          {this._renderSites()}
+        </View>
+        {this.state.authProcessActive && (
           <View
-            style={[
-              styles.sitesContainer,
-              {
-                backgroundColor: theme.grayBackground,
-              },
-            ]}
+            style={{
+              ...styles.authenticatingOverlay,
+              backgroundColor: theme.background,
+            }}
           >
-            {this._renderSites()}
+            <ActivityIndicator size="large" color={theme.grayUI} />
           </View>
-          {this.state.authProcessActive && (
-            <View
-              style={{
-                ...styles.authenticatingOverlay,
-                backgroundColor: theme.background,
-              }}
-            >
-              <ActivityIndicator size="large" color={theme.grayUI} />
-            </View>
-          )}
-        </SafeAreaView>
-      </>
+        )}
+      </SafeAreaView>
     );
   }
 }

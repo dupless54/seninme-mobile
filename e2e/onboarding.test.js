@@ -37,6 +37,11 @@ describe.each([['en'], ['fr']])(`Single-site shell (locale: %s)`, locale => {
     await expect(element(by.id('seninme-home-categories'))).toBeVisible();
   });
 
+  it('should keep Senin.me content inside the native WebView', async () => {
+    await element(by.id('seninme-home-latest')).tap();
+    await expect(element(by.id('seninme-webview'))).toBeVisible();
+  });
+
   it('should show Senin.me-only discovery actions', async () => {
     await element(by.text(i18n.t('discover'))).tap();
     await expect(element(by.id('seninme-discover-popular'))).toBeVisible();

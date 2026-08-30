@@ -162,7 +162,9 @@ export default function SingleSiteHome({
             <Text style={[styles.sectionTitle, { color: theme.grayTitle }]}>
               {i18n.t('home_trending')}
             </Text>
-            <Text style={[styles.sectionSubtitle, { color: theme.graySubtitle }]}>
+            <Text
+              style={[styles.sectionSubtitle, { color: theme.graySubtitle }]}
+            >
               {i18n.t('home_trending_description')}
             </Text>
           </View>

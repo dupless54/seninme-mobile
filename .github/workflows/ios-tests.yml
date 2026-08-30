@@ -16,10 +16,16 @@ jobs:
     # consuming scarce macOS runners for every intermediate stack level while
     # preserving exact-head iOS coverage at the merge boundary.
     if: github.event_name == 'push' || github.base_ref == 'main'
-    runs-on: macos-15-intel
+    # macos-14 remains supported until 2026-11-02 and currently provides a
+    # broader Intel runner pool. Pin Xcode 16.2 below so iPhone 16 Pro and
+    # iPad (10th generation) run against the bundled iOS 18.2 simulator.
+    runs-on: macos-14
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+
+      - name: Select Xcode 16.2
+        run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
 
       - name: Set up Node.js
         uses: actions/setup-node@v3

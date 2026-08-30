@@ -11,7 +11,7 @@ The manifest explicitly removes inherited permissions that the Senin.me app does
 - `READ_PHONE_STATE`
 - `com.google.android.gms.permission.AD_ID`
 
-`AD_ID` is removed with a manifest-merger rule so a transitive Google dependency cannot silently add advertising identifier access back to the final manifest.
+`AD_ID` is removed with a manifest-merger rule so a transitive Google dependency cannot silently add advertising identifier access back to the final manifest. The privacy regression test locks this rule so release identity cannot silently drift back toward advertising identifier access.
 
 Camera, Bluetooth, vibration, internet, and background-start capabilities remain because they support existing media, browser, notification/background-fetch, or communication behavior in the upstream mobile shell.
 

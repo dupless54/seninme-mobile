@@ -6,6 +6,17 @@ import Discourse from './Discourse';
 import APP_CONFIG from './app_config';
 
 const originalHandleOpenUrl = Discourse.prototype._handleOpenUrl;
+const originalOpenUrl = Discourse.prototype.openUrl;
+const siteUrl = APP_CONFIG.defaultSiteUrl.replace(/\/+$/, '');
+
+const isSeninMeUrl = url =>
+  url === siteUrl ||
+  url.startsWith(`${siteUrl}/`) ||
+  url.startsWith(`${siteUrl}?`) ||
+  url.startsWith(`${siteUrl}#`);
+
+const isUserApiAuthorizationUrl = url =>
+  url.startsWith(`${siteUrl}/user-api-key/new`);
 
 Discourse.prototype._handleOpenUrl = function (event) {
   if (
@@ -20,6 +31,19 @@ Discourse.prototype._handleOpenUrl = function (event) {
   }
 
   return originalHandleOpenUrl.call(this, event);
+};
+
+Discourse.prototype.openUrl = function (url) {
+  if (
+    typeof url === 'string' &&
+    isSeninMeUrl(url) &&
+    !isUserApiAuthorizationUrl(url)
+  ) {
+    this._navigation.navigate('WebView', { url });
+    return;
+  }
+
+  return originalOpenUrl.call(this, url);
 };
 
 export default Discourse;

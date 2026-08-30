@@ -12,6 +12,7 @@ import {
 import Components from './HomeScreenComponents';
 import Common from './CommonComponents';
 import { ThemeContext } from '../ThemeContext';
+import APP_CONFIG from '../app_config';
 import i18n from 'i18n-js';
 import { donateShortcut } from 'react-native-siri-shortcut';
 import { BottomTabBarHeightContext } from '@react-navigation/bottom-tabs';
@@ -98,9 +99,9 @@ class HomeScreen extends React.Component {
 
     const shortcutOptions = {
       // This activity type needs to be set in `NSUserActivityTypes` on the Info.plist
-      activityType: 'org.discourse.DiscourseApp.SiriShortcut',
-      keywords: ['discourse', 'forums', 'hub', 'discoursehub', site.title],
-      persistentIdentifier: 'DiscourseHubShortcut',
+      activityType: 'me.senin.mobile.SiriShortcut',
+      keywords: ['seninme', 'community', 'forum', site.title],
+      persistentIdentifier: 'SeninMeShortcut',
       isEligibleForSearch: true,
       isEligibleForPrediction: true,
       suggestedInvocationPhrase: site.title,
@@ -290,6 +291,9 @@ class HomeScreen extends React.Component {
           style={[styles.container, { backgroundColor: theme.background }]}
         >
           <Components.NavigationBar
+            onDidPressBrand={() =>
+              this.props.screenProps.openUrl(APP_CONFIG.defaultSiteUrl)
+            }
             onDidPressAndroidSettingsIcon={() =>
               this.onDidPressAndroidSettingsIcon()
             }

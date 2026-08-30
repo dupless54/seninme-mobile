@@ -34,7 +34,7 @@ export default function SingleSiteRecovery({ loading, onRetry }) {
           <Text style={styles.brandMarkText}>S</Text>
         </View>
         <Text style={[styles.title, { color: theme.grayTitle }]}>Senin.me</Text>
-        <Text style={[styles.subtitle, { color: theme.graySubtitle }]}> 
+        <Text style={[styles.subtitle, { color: theme.graySubtitle }]}>
           {loading
             ? i18n.t('single_site_recovery_loading')
             : i18n.t('single_site_recovery_description')}
@@ -43,7 +43,7 @@ export default function SingleSiteRecovery({ loading, onRetry }) {
         {loading ? (
           <View style={styles.loadingRow}>
             <ActivityIndicator size="small" color="#9D1B2C" />
-            <Text style={[styles.loadingText, { color: theme.graySubtitle }]}> 
+            <Text style={[styles.loadingText, { color: theme.graySubtitle }]}>
               {i18n.t('single_site_recovery_connecting')}
             </Text>
           </View>

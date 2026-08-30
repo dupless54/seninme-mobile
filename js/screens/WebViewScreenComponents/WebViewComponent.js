@@ -192,7 +192,8 @@ class WebViewComponent extends React.Component {
           return;
         }
 
-        const useSVC = Platform.OS === 'ios' && Settings.get('external_links_svc');
+        const useSVC =
+          Platform.OS === 'ios' && Settings.get('external_links_svc');
         if (useSVC) {
           if (!this.safariViewVisible) {
             SafariView.show({ url });
@@ -231,10 +232,7 @@ class WebViewComponent extends React.Component {
       return true;
     }
 
-    if (
-      !APP_CONFIG.singleSite &&
-      this.siteManager.urlInSites(request.url)
-    ) {
+    if (!APP_CONFIG.singleSite && this.siteManager.urlInSites(request.url)) {
       return true;
     }
 
@@ -243,7 +241,10 @@ class WebViewComponent extends React.Component {
       return false;
     }
 
-    if (request.url.startsWith('discourse://') || request.url === 'about:blank') {
+    if (
+      request.url.startsWith('discourse://') ||
+      request.url === 'about:blank'
+    ) {
       return false;
     }
 

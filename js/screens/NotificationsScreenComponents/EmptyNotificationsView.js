@@ -29,7 +29,9 @@ class EmptyNotificationsView extends React.Component {
         </Text>
         {this.props.onAction && this.props.actionLabel ? (
           <TouchableOpacity
-            testID={this.props.testID ? `${this.props.testID}-action` : undefined}
+            testID={
+              this.props.testID ? `${this.props.testID}-action` : undefined
+            }
             activeOpacity={0.75}
             onPress={this.props.onAction}
             style={[

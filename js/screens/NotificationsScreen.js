@@ -59,8 +59,18 @@ class NotificationsScreen extends React.Component {
     this._siteManager.subscribe(this._onSiteManagerChange);
 
     const connectedSites = this._siteManager.connectedSitesCount();
+    const nextState = {};
+
     if (connectedSites !== this.state.connectedSites) {
-      this.setState({ connectedSites });
+      nextState.connectedSites = connectedSites;
+    }
+
+    if (this._notification) {
+      nextState.dataSource = Immutable.fromJS(this._notification);
+    }
+
+    if (Object.keys(nextState).length > 0) {
+      this.setState(nextState);
     }
 
     if (this._refreshed) {

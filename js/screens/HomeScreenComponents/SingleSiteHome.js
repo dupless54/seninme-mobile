@@ -45,7 +45,13 @@ const QUICK_ACTIONS = [
   },
 ];
 
-export default function SingleSiteHome({ site, onOpen, onConnect, refreshing }) {
+export default function SingleSiteHome({
+  site,
+  refreshKey,
+  onOpen,
+  onConnect,
+  refreshing,
+}) {
   const theme = useContext(ThemeContext);
   const actions = QUICK_ACTIONS.filter(
     action => !action.requiresAuth || Boolean(site.authToken),
@@ -173,6 +179,7 @@ export default function SingleSiteHome({ site, onOpen, onConnect, refreshing }) 
 
         <TopicList
           site={site}
+          refreshKey={refreshKey}
           onClickTopic={endpoint => onOpen(endpoint, { hotTopic: true })}
           largeLayout={false}
         />

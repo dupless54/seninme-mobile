@@ -20,21 +20,8 @@ describe('Topic list', () => {
     await device.reloadReactNative();
   });
 
-  it('should show topic list when invoking Hot topics', async () => {
-    await element(by.id('nav-plus-icon')).tap();
-    await element(by.id('search-add-input')).typeText('meta.discourse.org');
-    await element(by.id('search-add-input')).tapReturnKey();
-    await element(by.id('add-site-icon')).tap();
-
-    await expect(element(by.text('Discourse Meta'))).toBeVisible();
-
-    await element(by.id('nav-plus-icon')).tap();
-    await element(by.id('search-add-input')).typeText('forums.swift.org');
-    await element(by.id('search-add-input')).tapReturnKey();
-    await element(by.id('add-site-icon')).tap();
-
-    await expect(element(by.text('Swift Forums'))).toBeVisible();
-
+  it('should show the Senin.me hot topics list', async () => {
+    await expect(element(by.text('Senin.me'))).toBeVisible();
     await expect(element(by.text(i18n.t('home')))).toBeVisible();
     await element(by.text(i18n.t('hot_topics'))).tap();
     await expect(element(by.id('topic-list'))).toExist();

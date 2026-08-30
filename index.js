@@ -3,6 +3,6 @@
  */
 
 import {AppRegistry} from 'react-native';
-import Discourse from './js/Discourse';
+import SeninMeApp from './js/seninme_app';
 
-AppRegistry.registerComponent('Discourse', () => Discourse);
+AppRegistry.registerComponent('Discourse', () => SeninMeApp);

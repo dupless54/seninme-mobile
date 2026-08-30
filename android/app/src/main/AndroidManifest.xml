@@ -48,13 +48,13 @@
               <action android:name="android.intent.action.VIEW" />
               <category android:name="android.intent.category.DEFAULT" />
               <category android:name="android.intent.category.BROWSABLE" />
-              <data android:scheme="discourse" android:host="auth_redirect" />
+              <data android:scheme="seninme" android:host="auth_redirect" />
           </intent-filter>
           <intent-filter>
               <action android:name="android.intent.action.VIEW" />
               <category android:name="android.intent.category.DEFAULT" />
               <category android:name="android.intent.category.BROWSABLE" />
-              <data android:scheme="discourse" android:host="open" />
+              <data android:scheme="seninme" android:host="open" />
           </intent-filter>
           <intent-filter>
               <action android:name="open_topic" />

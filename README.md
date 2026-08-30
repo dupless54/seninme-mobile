@@ -1,44 +1,62 @@
-# Discourse Mobile
+# Senin.me Mobile
 
-Native iOS and Android app for Discourse
+Native iOS and Android client for the Senin.me community, based on the open-source [DiscourseMobile](https://github.com/discourse/DiscourseMobile) project.
 
-## Getting Started
+This fork is being adapted as a single-site white-label application for `https://senin.me` while keeping Senin.me-specific behavior isolated from upstream code wherever practical.
 
-Install Yarn and Watchman
+## Current foundation
 
-```
+- Senin.me application branding
+- fixed single-site configuration for `https://senin.me`
+- `seninme://auth_redirect` User API Key callback
+- multi-site add/remove behavior disabled in the Senin.me runtime
+- official Discourse push relay disabled for the white-label build
+- Android and iOS display names updated to Senin.me
+
+See [`docs/SENINME_SETUP.md`](docs/SENINME_SETUP.md) for the required Discourse server settings and the planned push-notification setup.
+
+## Development
+
+Install Yarn and Watchman:
+
+```bash
 npm install -g yarn
 brew install watchman
 ```
 
-Install all the project dependencies:
+Install project dependencies:
 
-```
+```bash
 yarn
 ```
 
-On macOS, make sure you install CocoaPods and its packages:
+On macOS, install the Ruby/CocoaPods dependencies:
 
-```
+```bash
 bundle
 pod install --project-directory=ios
 ```
 
-Once installed you can get started with:
+Start Metro:
 
-```
+```bash
 npx react-native start
+```
 
-// and in a second terminal, either:
+Then run a platform build in another terminal:
+
+```bash
 npx react-native run-ios
-// or
+# or
 npx react-native run-android
 ```
 
-See more at: https://facebook.github.io/react-native/docs/getting-started.html
+For Android emulator development, localhost access may require:
 
-Note, on Android your localhost may not be accessible from the simulator, read the error message carefully and consider running:
-
-```
+```bash
 adb reverse tcp:8081 tcp:8081
 ```
+
+## Upstream and license
+
+This project is derived from DiscourseMobile and retains its MIT license and required copyright notice. Upstream changes should be integrated with minimal changes to core DiscourseMobile files whenever possible.

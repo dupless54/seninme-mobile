@@ -1,7 +1,7 @@
 import { by, device, element, expect } from 'detox';
 import i18n from 'i18n-js';
 
-describe.each([['en'], ['fr']])(`Onboarding (locale: %s)`, locale => {
+describe.each([['en'], ['fr']])(`Single-site shell (locale: %s)`, locale => {
   beforeAll(async () => {
     i18n.translations = {
       en: require('../js/locale/en.json'),
@@ -25,14 +25,10 @@ describe.each([['en'], ['fr']])(`Onboarding (locale: %s)`, locale => {
     await device.reloadReactNative();
   });
 
-  it('should have onboarding screen', async () => {
-    await expect(element(by.text(i18n.t('no_sites_yet')))).toBeVisible();
-    await element(by.id('nav-plus-icon')).tap();
-    await expect(
-      element(by.text(i18n.t('term_placeholder_single_site'))),
-    ).toBeVisible();
-    await element(by.text(i18n.t('back'))).tap();
-    await expect(element(by.text(i18n.t('no_sites_yet')))).toBeVisible();
+  it('should boot as the Senin.me single-site app', async () => {
+    await expect(element(by.text('Senin.me'))).toBeVisible();
+    await expect(element(by.id('nav-plus-icon'))).not.toExist();
+    await expect(element(by.text(i18n.t('home')))).toBeVisible();
   });
 
   it('should show the Discover screen', async () => {
@@ -44,24 +40,6 @@ describe.each([['en'], ['fr']])(`Onboarding (locale: %s)`, locale => {
     await element(by.text(i18n.t('notifications'))).tap();
     await expect(element(by.text(i18n.t('replies')))).toBeVisible();
     await element(by.text(i18n.t('home'))).tap();
-    await expect(element(by.text(i18n.t('no_sites_yet')))).toBeVisible();
-  });
-
-  it('should allow adding and removing a site to the Home list', async () => {
-    await expect(element(by.text(i18n.t('no_sites_yet')))).toBeVisible();
-    await element(by.id('nav-plus-icon')).tap();
-    await element(by.id('search-add-input')).typeText('meta.discourse.org');
-    await element(by.id('search-add-input')).tapReturnKey();
-
-    await element(by.id('add-site-icon')).tap();
-    await expect(element(by.text(i18n.t('home')))).toBeVisible();
-    await expect(element(by.text('Discourse Meta'))).toBeVisible();
-    await expect(element(by.text(i18n.t('no_sites_yet')))).not.toBeVisible();
-
-    // cleanup added Home site row
-    await element(by.text('Discourse Meta')).swipe('left', 'fast', 0.5);
-    await element(by.id('site-row-delete')).tap();
-
-    await expect(element(by.text('Discourse Meta'))).not.toBeVisible();
+    await expect(element(by.text('Senin.me'))).toBeVisible();
   });
 });

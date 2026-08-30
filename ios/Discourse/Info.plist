@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>Discourse</string>
+	<string>Senin.me</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -28,10 +28,10 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>org.discourse.DiscourseApp</string>
+			<string>me.senin.mobile</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>discourse</string>
+				<string>seninme</string>
 			</array>
 		</dict>
 		<dict/>
@@ -83,13 +83,13 @@
 		</dict>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-	<string>Allows the app to use the camera for video calls on your Discourse sites, and to upload images from your camera into a Discourse post.</string>
+	<string>Senin.me uses the camera for video calls and for uploading images to posts.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string/>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Allows the app to use the microphone for voice and video calls on your Discourse sites, and to upload audio and video into a Discourse post.</string>
+	<string>Senin.me uses the microphone for voice and video calls and for uploading audio or video to posts.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Allows the app to upload images from your library into a Discourse post.</string>
+	<string>Senin.me uses your photo library when you choose images to upload to posts.</string>
 	<key>NSUserActivityTypes</key>
 	<array>
 		<string>org.discourse.DiscourseApp.SiriShortcut</string>

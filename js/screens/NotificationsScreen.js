@@ -151,7 +151,10 @@ class NotificationsScreen extends React.Component {
         testID="seninme-notifications-screen"
         style={{ flex: 1, backgroundColor: theme.background }}
       >
-        <Components.NavigationBar title={title} progress={this.state.progress} />
+        <Components.NavigationBar
+          title={title}
+          progress={this.state.progress}
+        />
 
         {this._renderListHeader()}
 

@@ -3,11 +3,12 @@
 
 import React from 'react';
 import Immutable from 'immutable';
-import { InteractionManager, View } from 'react-native';
+import { InteractionManager, RefreshControl, View } from 'react-native';
 import { ImmutableVirtualizedList } from 'react-native-immutable-list-view';
 import Components from './NotificationsScreenComponents';
 import Common from './CommonComponents';
 import DiscourseUtils from '../DiscourseUtils';
+import APP_CONFIG from '../app_config';
 import { ThemeContext } from '../ThemeContext';
 import i18n from 'i18n-js';
 import { BottomTabBarHeightContext } from '@react-navigation/bottom-tabs';
@@ -19,34 +20,79 @@ class NotificationsScreen extends React.Component {
   constructor(props) {
     super(props);
 
+    this._siteManager = this.props.screenProps.siteManager;
+
     this.state = {
       progress: 0,
       renderPlaceholderOnly: true,
       selectedIndex: 0,
-      connectedSites: 0,
+      connectedSites: this._siteManager.connectedSitesCount(),
+      dataSource: Immutable.List(),
+      isRefreshing: false,
     };
 
-    this._siteManager = this.props.screenProps.siteManager;
+    this._onSiteManagerChange = () => this.onSiteManagerChange();
+    this._primeNotifications();
+  }
+
+  _primeNotifications() {
+    if (this._siteManager.connectedSitesCount() === 0) {
+      this._refreshed = true;
+      return;
+    }
 
     if (this.props.screenProps.seenNotificationMap) {
       this._seenNotificationMap = this.props.screenProps.seenNotificationMap;
       this.refresh();
-    } else {
-      this._siteManager.getSeenNotificationMap().then(map => {
-        this._seenNotificationMap = map;
-        this.props.screenProps.setSeenNotificationMap(map);
-        this.refresh();
-      });
+      return;
     }
+
+    this._siteManager.getSeenNotificationMap().then(map => {
+      this._seenNotificationMap = map;
+      this.props.screenProps.setSeenNotificationMap(map);
+      this.refresh();
+    });
   }
 
   componentDidMount() {
-    this.setState({ connectedSites: this._siteManager.connectedSitesCount() });
     this._mounted = true;
+    this._siteManager.subscribe(this._onSiteManagerChange);
+
+    const connectedSites = this._siteManager.connectedSitesCount();
+    if (connectedSites !== this.state.connectedSites) {
+      this.setState({ connectedSites });
+    }
 
     if (this._refreshed) {
       this.removePlaceholder();
     }
+  }
+
+  onSiteManagerChange() {
+    const connectedSites = this._siteManager.connectedSitesCount();
+    const previouslyConnected = this.state.connectedSites;
+
+    if (connectedSites === previouslyConnected) {
+      return;
+    }
+
+    this.setState({ connectedSites }, () => {
+      if (connectedSites === 0) {
+        this._refreshed = true;
+        this.setState({ dataSource: Immutable.List() }, () => {
+          this.removePlaceholder();
+        });
+        return;
+      }
+
+      if (previouslyConnected === 0) {
+        this._siteManager.getSeenNotificationMap().then(map => {
+          this._seenNotificationMap = map;
+          this.props.screenProps.setSeenNotificationMap(map);
+          this.refresh();
+        });
+      }
+    });
   }
 
   setTimeout(callback, timeout) {
@@ -69,15 +115,22 @@ class NotificationsScreen extends React.Component {
 
   componentWillUnmount() {
     this._mounted = false;
+    this._siteManager.unsubscribe(this._onSiteManagerChange);
   }
 
   render() {
     const theme = this.context;
+    const title = APP_CONFIG.singleSite
+      ? i18n.t('seninme_notifications_title')
+      : i18n.t('notifications');
 
     if (this.state.renderPlaceholderOnly) {
       return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-          <Components.NavigationBar onDidPressRightButton={() => {}} />
+        <SafeAreaView
+          testID="seninme-notifications-screen"
+          style={{ flex: 1, backgroundColor: theme.background }}
+        >
+          <Components.NavigationBar title={title} />
           <View style={{ height: 50, marginTop: 0, paddingTop: 0 }}>
             {this._renderListHeader()}
           </View>
@@ -86,8 +139,11 @@ class NotificationsScreen extends React.Component {
     }
 
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-        <Components.NavigationBar progress={this.state.progress} />
+      <SafeAreaView
+        testID="seninme-notifications-screen"
+        style={{ flex: 1, backgroundColor: theme.background }}
+      >
+        <Components.NavigationBar title={title} progress={this.state.progress} />
 
         {this._renderListHeader()}
 
@@ -99,6 +155,17 @@ class NotificationsScreen extends React.Component {
   }
 
   _renderEmptyNotifications() {
+    if (APP_CONFIG.singleSite && this.state.connectedSites === 0) {
+      return (
+        <Components.EmptyNotificationsView
+          testID="seninme-notifications-connect"
+          text={i18n.t('seninme_notifications_connect_description')}
+          actionLabel={i18n.t('seninme_notifications_connect_action')}
+          onAction={() => this.props.navigation.navigate('Home')}
+        />
+      );
+    }
+
     let text;
     switch (this.state.selectedIndex) {
       case 0:
@@ -122,6 +189,8 @@ class NotificationsScreen extends React.Component {
   }
 
   _renderList() {
+    const theme = this.context;
+
     return (
       <BottomTabBarHeightContext.Consumer>
         {tabBarHeight => (
@@ -132,6 +201,13 @@ class NotificationsScreen extends React.Component {
             renderItem={rowData => this._renderListRow(rowData)}
             keyExtractor={rowData => this._listIndex(rowData)}
             ListEmptyComponent={''}
+            refreshControl={
+              <RefreshControl
+                refreshing={this.state.isRefreshing}
+                onRefresh={() => this.pullDownToRefresh()}
+                tintColor={theme.graySubtitle}
+              />
+            }
           />
         )}
       </BottomTabBarHeightContext.Consumer>
@@ -159,6 +235,7 @@ class NotificationsScreen extends React.Component {
     return (
       <Components.Row
         site={rowData.site}
+        singleSite={APP_CONFIG.singleSite}
         onClick={() =>
           this._openNotificationForSite(rowData.notification, rowData.site)
         }
@@ -168,18 +245,45 @@ class NotificationsScreen extends React.Component {
   }
 
   refresh() {
+    if (this._siteManager.connectedSitesCount() === 0) {
+      this._refreshed = true;
+      if (this._mounted) {
+        this.setState({ dataSource: Immutable.List() }, () => {
+          this.removePlaceholder();
+        });
+      }
+      return Promise.resolve();
+    }
+
     let types =
       this.state.selectedIndex === 1
         ? NotificationsScreen.replyTypes
         : undefined;
-    this._fetchNotifications(types, {
+    return this._fetchNotifications(types, {
       onlyNew: this.state.selectedIndex === 0,
-      newMap: this._seenNotificationMap,
+      newMap: this._seenNotificationMap || {},
       silent: false,
     });
   }
 
+  pullDownToRefresh() {
+    if (this.state.connectedSites === 0) {
+      return;
+    }
+
+    this.setState({ isRefreshing: true });
+    Promise.resolve(this.refresh()).finally(() => {
+      if (this._mounted) {
+        this.setState({ isRefreshing: false });
+      }
+    });
+  }
+
   _renderListHeader() {
+    if (APP_CONFIG.singleSite && this.state.connectedSites === 0) {
+      return null;
+    }
+
     return (
       <Common.Filter
         selectedIndex={this.state.selectedIndex}
@@ -195,7 +299,7 @@ class NotificationsScreen extends React.Component {
 
   _fetchNotifications(notificationTypes, options) {
     if (this._fetching) {
-      return;
+      return this._fetchPromise || Promise.resolve();
     }
     this._fetching = true;
 
@@ -209,7 +313,7 @@ class NotificationsScreen extends React.Component {
       }, 100);
     }
 
-    this._siteManager
+    this._fetchPromise = this._siteManager
       .notifications(notificationTypes, options)
       .then(notifications => {
         this._notification = notifications;
@@ -237,9 +341,20 @@ class NotificationsScreen extends React.Component {
           this.removePlaceholder();
         }
       })
+      .catch(error => {
+        this._refreshed = true;
+        console.log('Failed to refresh notifications', error);
+        if (this._mounted) {
+          this.setState({ dataSource: Immutable.List() });
+          this.removePlaceholder();
+        }
+      })
       .finally(() => {
         this._fetching = false;
+        this._fetchPromise = null;
       });
+
+    return this._fetchPromise;
   }
 }
 

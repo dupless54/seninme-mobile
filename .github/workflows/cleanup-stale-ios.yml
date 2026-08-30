@@ -1,0 +1,54 @@
+name: cleanup-stale-ios
+
+on:
+  push:
+    branches:
+      - feature/seninme-native-shell-phase-2
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel stale queued iOS runs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            let page = 1;
+            let cancelled = 0;
+
+            while (true) {
+              const { data } = await github.rest.actions.listWorkflowRunsForRepo({
+                owner,
+                repo,
+                status: 'queued',
+                per_page: 100,
+                page,
+              });
+
+              const runs = data.workflow_runs || [];
+              for (const run of runs) {
+                if (run.name !== 'ios-tests' || run.head_sha === context.sha) {
+                  continue;
+                }
+
+                await github.rest.actions.cancelWorkflowRun({
+                  owner,
+                  repo,
+                  run_id: run.id,
+                });
+                cancelled += 1;
+              }
+
+              if (runs.length < 100) {
+                break;
+              }
+              page += 1;
+            }
+
+            core.info(`Cancelled ${cancelled} stale queued ios-tests runs.`);

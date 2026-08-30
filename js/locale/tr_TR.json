@@ -145,5 +145,9 @@
   "settings_terms": "Kullanım Koşulları",
   "settings_about": "Senin.me hakkında",
   "settings_appearance_section": "Görünüm",
-  "settings_version": "Senin.me %{version} (%{build})"
+  "settings_version": "Senin.me %{version} (%{build})",
+  "single_site_recovery_loading": "Senin.me topluluğun hazırlanıyor.",
+  "single_site_recovery_connecting": "Senin.me'ye bağlanılıyor…",
+  "single_site_recovery_description": "Senin.me'ye ulaşılamadı. İnternet bağlantını kontrol edip yeniden dene.",
+  "single_site_recovery_retry": "Yeniden dene"
 }

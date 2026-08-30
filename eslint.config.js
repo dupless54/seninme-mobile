@@ -10,6 +10,7 @@ export default [
       parser: hermesEslint,
       globals: {
         ...globals.node,
+        __DEV__: 'readonly',
       },
     },
     plugins: {

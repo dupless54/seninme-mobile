@@ -115,7 +115,9 @@ const TopicList = props => {
 
         const jsonTopics = json.topic_list?.topics || [];
         setTopics(
-          jsonTopics.filter(topic => topic.pinned === false).slice(0, numberOfTopics),
+          jsonTopics
+            .filter(topic => topic.pinned === false)
+            .slice(0, numberOfTopics),
         );
       })
       .catch(e => {

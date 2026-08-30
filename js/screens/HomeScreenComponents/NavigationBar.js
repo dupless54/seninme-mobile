@@ -6,15 +6,16 @@ import {
   Linking,
   Platform,
   StyleSheet,
+  Text,
   TouchableHighlight,
   View,
 } from 'react-native';
 import FontAwesome5 from '@react-native-vector-icons/fontawesome5';
 import { ThemeContext } from '../../ThemeContext';
+import APP_CONFIG from '../../app_config';
 
 const NavigationBar = props => {
   const theme = useContext(ThemeContext);
-  const discourseUrl = 'https://www.discourse.org';
 
   const renderCogButton = () => {
     if (Platform.OS !== 'android') {
@@ -38,6 +39,10 @@ const NavigationBar = props => {
   };
 
   const renderPlusButton = () => {
+    if (APP_CONFIG.singleSite) {
+      return;
+    }
+
     return (
       <TouchableHighlight
         style={{ ...styles.plusButton }}
@@ -56,18 +61,13 @@ const NavigationBar = props => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}> 
       <View style={styles.titleContainer}>
         <TouchableHighlight
           underlayColor={'transparent'}
-          onPress={() => Linking.openURL(discourseUrl)}
+          onPress={() => Linking.openURL(APP_CONFIG.defaultSiteUrl)}
         >
-          <FontAwesome5
-            name={'discourse'}
-            size={26}
-            iconStyle="brand"
-            style={{ color: theme.grayTitle }}
-          />
+          <Text style={[styles.title, { color: theme.grayTitle }]}>Senin.me</Text>
         </TouchableHighlight>
       </View>
       {renderCogButton()}
@@ -89,6 +89,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 0,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '700',
+    letterSpacing: -0.4,
   },
   separator: {
     bottom: 0,

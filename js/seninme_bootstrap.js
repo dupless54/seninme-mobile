@@ -127,7 +127,10 @@ SiteManager.prototype.generateAuthURL = function (site) {
         };
 
         if (APP_CONFIG.pushBaseUrl) {
-          params.push_url = `${APP_CONFIG.pushBaseUrl.replace(/\/+$/, '')}/api/publish_${Platform.OS}`;
+          params.push_url = `${APP_CONFIG.pushBaseUrl.replace(
+            /\/+$/,
+            '',
+          )}/api/publish_${Platform.OS}`;
         }
 
         return `${site.url}/user-api-key/new?${this.serializeParams(params)}`;

@@ -1,0 +1,43 @@
+/* @flow */
+'use strict';
+
+import { PermissionsAndroid, Platform } from 'react-native';
+import PushNotificationIOS from '@react-native-community/push-notification-ios';
+import APP_CONFIG from './app_config';
+
+let installed = false;
+
+/**
+ * Keep inherited DiscourseMobile notification code dormant until Senin.me has
+ * its own push relay and platform credentials. This adapter intentionally
+ * lives outside the upstream app class so future upstream syncs stay small.
+ */
+export const installPushPolicy = DiscourseClass => {
+  if (installed || APP_CONFIG.pushBaseUrl) {
+    return;
+  }
+
+  installed = true;
+
+  if (Platform.OS === 'android') {
+    const originalRequest = PermissionsAndroid.request.bind(PermissionsAndroid);
+
+    PermissionsAndroid.request = (permission, rationale) => {
+      if (permission === PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS) {
+        return Promise.resolve(PermissionsAndroid.RESULTS.DENIED);
+      }
+
+      return originalRequest(permission, rationale);
+    };
+  }
+
+  if (Platform.OS === 'ios') {
+    PushNotificationIOS.requestPermissions = () =>
+      Promise.resolve({ alert: false, badge: false, sound: false });
+  }
+
+  // Disable the inherited background local-notification fallback and ignore
+  // stale notification callbacks from previous installs while push is off.
+  DiscourseClass.prototype._initBackgroundFetch = async function () {};
+  DiscourseClass.prototype._handleNotification = function () {};
+};

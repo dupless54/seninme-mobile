@@ -10,7 +10,7 @@
 			<key>Type</key>
 			<string>PSToggleSwitchSpecifier</string>
 			<key>Title</key>
-			<string>Open external links in app</string>
+			<string>Open external links in Senin.me</string>
 			<key>Key</key>
 			<string>external_links_svc</string>
 			<key>DefaultValue</key>

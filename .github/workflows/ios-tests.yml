@@ -6,8 +6,16 @@ on:
       - main
   pull_request:
 
+concurrency:
+  group: ios-tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   ios-tests:
+    # Stacked PRs are validated when they are retargeted to main. This avoids
+    # consuming scarce macOS runners for every intermediate stack level while
+    # preserving exact-head iOS coverage at the merge boundary.
+    if: github.event_name == 'push' || github.base_ref == 'main'
     runs-on: macos-15-intel
     steps:
       - name: Checkout repository

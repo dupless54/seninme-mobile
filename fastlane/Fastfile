@@ -15,6 +15,18 @@ def match_readonly?
   ENV.fetch("SENINME_MATCH_READONLY", "true").downcase != "false"
 end
 
+def match_options(type)
+  {
+    type: type,
+    readonly: match_readonly?,
+    git_url: required_env!("SENINME_MATCH_GIT_URL"),
+    git_branch: ENV.fetch("SENINME_MATCH_GIT_BRANCH", "main"),
+    api_key_path: required_env!("SENINME_ASC_API_KEY_PATH"),
+    team_id: required_env!("SENINME_IOS_TEAM_ID"),
+    app_identifier: [IOS_APP_IDENTIFIER, IOS_SHARE_EXTENSION_IDENTIFIER],
+  }
+end
+
 def android_signing_properties
   {
     "MYAPP_VERSION" => ANDROID_APP_VERSION,
@@ -25,29 +37,17 @@ def android_signing_properties
   }
 end
 
-def seninme_match(type)
-  match(
-    type: type,
-    readonly: match_readonly?,
-    git_url: required_env!("SENINME_MATCH_GIT_URL"),
-    git_branch: ENV.fetch("SENINME_MATCH_GIT_BRANCH", "main"),
-    api_key_path: required_env!("SENINME_ASC_API_KEY_PATH"),
-    team_id: required_env!("SENINME_IOS_TEAM_ID"),
-    app_identifier: [IOS_APP_IDENTIFIER, IOS_SHARE_EXTENSION_IDENTIFIER]
-  )
-end
-
 default_platform :ios
 
 platform :ios do
   desc "Fetch Senin.me App Store signing assets"
   lane :certs do
-    seninme_match("appstore")
+    match(**match_options("appstore"))
   end
 
   desc "Fetch Senin.me ad-hoc signing assets"
   lane :certs_adhoc do
-    seninme_match("adhoc")
+    match(**match_options("adhoc"))
   end
 
   desc "Submit a Senin.me build to TestFlight"
@@ -74,7 +74,7 @@ platform :ios do
       targets: [PROJECT_NAME, "ShareExtension"]
     )
 
-    seninme_match("appstore")
+    match(**match_options("appstore"))
 
     gym(
       scheme: PROJECT_NAME,
@@ -101,7 +101,7 @@ platform :ios do
       targets: [PROJECT_NAME, "ShareExtension"]
     )
 
-    seninme_match("adhoc")
+    match(**match_options("adhoc"))
 
     gym(
       scheme: PROJECT_NAME,

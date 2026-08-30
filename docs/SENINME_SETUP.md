@@ -38,6 +38,10 @@ Current foundation values:
 
 The native Android application ID and iOS bundle identifier are intentionally left for a dedicated follow-up change because they affect signing, Firebase configuration, App Store Connect, Google Play, share extensions, and other native targets.
 
+## Validation
+
+Pull requests should pass the repository's linting and test workflows before being merged. Forks may require GitHub Actions to be explicitly enabled before pull-request workflow runs are created.
+
 ## Upstream strategy
 
 Senin.me-specific runtime behavior is isolated in:

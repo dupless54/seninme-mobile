@@ -77,6 +77,49 @@ SiteManager.prototype.load = function () {
     });
 };
 
+SiteManager.prototype.retryConfiguredSite = async function () {
+  if (!APP_CONFIG.singleSite) {
+    return false;
+  }
+
+  this._loading = true;
+  this._onChange();
+
+  try {
+    const configuredSite = await Site.fromTerm(APP_CONFIG.defaultSiteUrl);
+
+    if (!configuredSite) {
+      this.sites = [];
+      return false;
+    }
+
+    configuredSite.createdAt = Date.now();
+    this.sites = [configuredSite];
+    this.save();
+    this.updateNativeMenu();
+
+    try {
+      const latestSite = await configuredSite.ensureLatestApi();
+      if (latestSite) {
+        configuredSite.apiVersion = latestSite.apiVersion;
+        configuredSite.icon = latestSite.icon || configuredSite.icon;
+        configuredSite.lastChecked = Date.now();
+      }
+    } catch (error) {
+      console.log('Failed to refresh recovered Senin.me site', error);
+    }
+
+    return true;
+  } catch (error) {
+    console.log('Failed to recover configured Senin.me site', error);
+    this.sites = [];
+    return false;
+  } finally {
+    this._loading = false;
+    this._onChange();
+  }
+};
+
 SiteManager.prototype.add = function (site) {
   if (!APP_CONFIG.singleSite) {
     return;

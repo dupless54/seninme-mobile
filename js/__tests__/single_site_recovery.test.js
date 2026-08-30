@@ -18,6 +18,14 @@ describe('Senin.me single-site recovery', () => {
     expect(recoveryIndex).toBeLessThan(onboardingIndex);
   });
 
+  test('synchronizes cached site state when Home mounts', () => {
+    const home = read('js/screens/HomeScreen.js');
+
+    expect(home).toContain('onChangeSites() {');
+    expect(home).toContain('data: this._siteManager.listSites()');
+    expect(home).not.toContain('if (e && e.event)');
+  });
+
   test('can re-discover the configured community', () => {
     const bootstrap = read('js/seninme_bootstrap.js');
 

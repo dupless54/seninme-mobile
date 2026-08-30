@@ -42,7 +42,7 @@ export const parseSeninMeUrl = url => {
 
       try {
         params[decodeURIComponent(key)] = decodeURIComponent(value);
-      } catch (_error) {
+      } catch {
         // Ignore malformed deep-link parameters rather than falling back to
         // the upstream multi-site URL handler.
       }

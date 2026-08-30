@@ -120,9 +120,7 @@ class NotificationsScreen extends React.Component {
 
   render() {
     const theme = this.context;
-    const title = APP_CONFIG.singleSite
-      ? i18n.t('seninme_notifications_title')
-      : i18n.t('notifications');
+    const title = i18n.t('notifications');
 
     if (this.state.renderPlaceholderOnly) {
       return (
@@ -159,8 +157,8 @@ class NotificationsScreen extends React.Component {
       return (
         <Components.EmptyNotificationsView
           testID="seninme-notifications-connect"
-          text={i18n.t('seninme_notifications_connect_description')}
-          actionLabel={i18n.t('seninme_notifications_connect_action')}
+          text={i18n.t('settings_connect_description')}
+          actionLabel={i18n.t('settings_connect_action')}
           onAction={() => this.props.navigation.navigate('Home')}
         />
       );

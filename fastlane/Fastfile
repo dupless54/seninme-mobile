@@ -1,203 +1,112 @@
-fastlane_require "base64"
-fastlane_require "fileutils"
-fastlane_require "json"
-
 IOS_APP_VERSION = "2.2.3"
-ANDROID_APP_VERSION = "2.2.0" # run `fastlane bootstrap` after editing this
+ANDROID_APP_VERSION = "2.2.3"
 PROJECT_NAME = "Discourse"
-IOS_TEAM_ID = "6T3LU73T8S"
-KEYS_REPOSITORY = "git@github.com:discourse-org/discourse-mobile-keys.git"
+IOS_APP_IDENTIFIER = "me.senin.mobile"
+IOS_SHARE_EXTENSION_IDENTIFIER = "me.senin.mobile.ShareExtension"
+ANDROID_PACKAGE_NAME = "me.senin.mobile"
+
+def required_env!(name)
+  value = ENV[name]
+  UI.user_error!("Missing required environment variable #{name}") if value.to_s.strip.empty?
+  value
+end
+
+def match_readonly?
+  ENV.fetch("SENINME_MATCH_READONLY", "true").downcase != "false"
+end
+
+def android_signing_properties
+  {
+    "MYAPP_VERSION" => ANDROID_APP_VERSION,
+    "MYAPP_RELEASE_STORE_FILE" => required_env!("SENINME_ANDROID_KEYSTORE_PATH"),
+    "MYAPP_RELEASE_KEY_ALIAS" => required_env!("SENINME_ANDROID_KEY_ALIAS"),
+    "MYAPP_RELEASE_STORE_PASSWORD" => required_env!("SENINME_ANDROID_STORE_PASSWORD"),
+    "MYAPP_RELEASE_KEY_PASSWORD" => required_env!("SENINME_ANDROID_KEY_PASSWORD"),
+  }
+end
+
+def seninme_match(type)
+  match(
+    type: type,
+    readonly: match_readonly?,
+    git_url: required_env!("SENINME_MATCH_GIT_URL"),
+    git_branch: ENV.fetch("SENINME_MATCH_GIT_BRANCH", "main"),
+    api_key_path: required_env!("SENINME_ASC_API_KEY_PATH"),
+    team_id: required_env!("SENINME_IOS_TEAM_ID"),
+    app_identifier: [IOS_APP_IDENTIFIER, IOS_SHARE_EXTENSION_IDENTIFIER]
+  )
+end
 
 default_platform :ios
 
-desc "Generate icons"
-lane :icons do
-  # make sure this is installed
-  # npm install -g yo generator-rn-toolbox
-  # brew install imagemagick
-  Dir.chdir("..") do
-    system("yo rn-toolbox:assets --icon icon.png")
-  end
-end
-
-desc "Bootstrap keys"
-lane :bootstrap do
-  FileUtils.rm_rf("keys")
-  `git clone #{KEYS_REPOSITORY} keys`
-
-  `openssl enc -aes-256-cbc -d -in keys/secrets.enc > keys/secrets.json -md md5`
-  `openssl enc -aes-256-cbc -d -in keys/appstoreconnect-key.enc > keys/appstoreconnect-key.json -md md5`
-
-  File.open("google-play-api-secret.json","w") do |f|
-    f.write(secrets["google-play-api-secret"].to_json)
-  end
-
-  File.open("my-release-key.keystore","w") do |f|
-    f.write(secrets["my_release_key_store"])
-  end
-
-  appfile = <<TEMPLATE
-# Generated from `fastlane bootstrap` do not edit or commit
-
-# iOS
-app_identifier "org.discourse.DiscourseApp"
-apple_id "#{secrets["apple_id"]}"
-team_id "#{IOS_TEAM_ID}"
-
-# Android
-json_key_file "fastlane/google-play-api-secret.json"
-package_name "com.discourse"
-TEMPLATE
-  File.write("Appfile", appfile)
-
-  gradle_properties = <<TEMPLATE
-# Generated from `fastlane bootstrap` do not edit or commit
-MYAPP_VERSION=#{ANDROID_APP_VERSION}
-MYAPP_RELEASE_STORE_FILE=my-release-key.keystore
-MYAPP_RELEASE_KEY_ALIAS=discourse
-MYAPP_RELEASE_STORE_PASSWORD=#{google_key_store_password}
-MYAPP_RELEASE_KEY_PASSWORD=#{google_key_store_password}
-
-# Project-wide Gradle settings.
-
-# IDE (e.g. Android Studio) users:
-# Gradle settings configured through the IDE *will override*
-# any settings specified in this file.
-
-# For more details on how to configure your build environment visit
-# http://www.gradle.org/docs/current/userguide/build_environment.html
-
-# Specifies the JVM arguments used for the daemon process.
-# The setting is particularly useful for tweaking memory settings.
-# Default value: -Xmx512m -XX:MaxMetaspaceSize=256m
-org.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=512m
-
-# When configured, Gradle will run in incubating parallel mode.
-# This option should only be used with decoupled projects. More details, visit
-# http://www.gradle.org/docs/current/userguide/multi_project_builds.html#sec:decoupled_projects
-# org.gradle.parallel=true
-
-# AndroidX package structure to make it clearer which packages are bundled with the
-# Android operating system, and which are packaged with your app's APK
-# https://developer.android.com/topic/libraries/support-library/androidx-rn
-android.useAndroidX=true
-
-# Use this property to specify which architecture you want to build.
-# You can also override it from the CLI using
-# ./gradlew <task> -PreactNativeArchitectures=x86_64
-reactNativeArchitectures=armeabi-v7a,arm64-v8a,x86,x86_64
-
-# Use this property to enable support to the new architecture.
-# This will allow you to use TurboModules and the Fabric render in
-# your application. You should enable this flag either if you want
-# to write custom TurboModules/Fabric components OR use libraries that
-# are providing them.
-newArchEnabled=true
-
-# Use this property to enable or disable the Hermes JS engine.
-# If set to false, you will be using JSC instead.
-hermesEnabled=true
-
-
-
-TEMPLATE
-  File.write(File.expand_path("../android/gradle.properties"), gradle_properties)
-
-  key_store = Base64.decode64(File.open("my-release-key.keystore").read)
-  File.write(File.expand_path("../android/app/my-release-key.keystore"), key_store)
-
-  google_services = File.open("keys/google-services.json").read
-  File.write(File.expand_path("../android/app/google-services.json"), google_services)
-end
-
-def secrets
-  @secrets ||= JSON.load(File.read("keys/secrets.json"))
-end
-
-def apple_id
-  @apple_id ||= secrets["apple_id"]
-end
-
-def google_key_store_password
-  @google_key_store_password ||= secrets["google_key_store_password"]
-end
-
 platform :ios do
-  before_all do
+  desc "Fetch Senin.me App Store signing assets"
+  lane :certs do
+    seninme_match("appstore")
+  end
+
+  desc "Fetch Senin.me ad-hoc signing assets"
+  lane :certs_adhoc do
+    seninme_match("adhoc")
+  end
+
+  desc "Submit a Senin.me build to TestFlight"
+  lane :release do
+    team_id = required_env!("SENINME_IOS_TEAM_ID")
+    api_key_path = required_env!("SENINME_ASC_API_KEY_PATH")
+
     increment_version_number_in_plist(
       xcodeproj: "./ios/#{PROJECT_NAME}.xcodeproj",
       target: PROJECT_NAME,
       version_number: IOS_APP_VERSION
     )
-
     increment_version_number_in_plist(
       xcodeproj: "./ios/#{PROJECT_NAME}.xcodeproj",
       target: "ShareExtension",
       version_number: IOS_APP_VERSION
     )
+    increment_build_number(xcodeproj: "./ios/#{PROJECT_NAME}.xcodeproj")
 
-    increment_build_number(
-      xcodeproj: "./ios/#{PROJECT_NAME}.xcodeproj"
+    update_code_signing_settings(
+      use_automatic_signing: true,
+      path: "./ios/#{PROJECT_NAME}.xcodeproj",
+      team_id: team_id,
+      targets: [PROJECT_NAME, "ShareExtension"]
     )
-  end
 
-  desc "update all the certs"
-  lane :certs do
-    system("rm -rf ~/Library/MobileDevice/Provisioning\ Profiles/*.mobile*")
+    seninme_match("appstore")
 
-    # Register devices manually in developer.apple.com and then pull the provisioning profile
-    # register_devices(devices_file: File.expand_path("./keys/ios-beta-devices.txt"))
-
-    match(
-      force: true,
-      type: "appstore",
-      git_url: KEYS_REPOSITORY,
-      api_key_path: "fastlane/keys/appstoreconnect-key.json",
-      app_identifier: ["org.discourse.DiscourseApp", "org.discourse.DiscourseApp.ShareExtension"]
-    )
-    match(
-      force: true,
-      type: "adhoc",
-      git_url: KEYS_REPOSITORY,
-      api_key_path: "fastlane/keys/appstoreconnect-key.json",
-      app_identifier: ["org.discourse.DiscourseApp", "org.discourse.DiscourseApp.ShareExtension"]
-    )
-    # match(force: true, type: "development", git_url: KEYS_REPOSITORY)
-  end
-
-  desc "Submit a new build to Testflight"
-  lane :release do
     gym(
       scheme: PROJECT_NAME,
       export_method: "app-store",
-      export_options: {
-        provisioningProfiles: {
-          "org.discourse.DiscourseApp" => "match AppStore org.discourse.DiscourseApp 1776778136",
-          "org.discourse.DiscourseApp.ShareExtension" => "match AppStore org.discourse.DiscourseApp.ShareExtension 1776778138"
-        }
-      },
+      export_team_id: team_id,
       clean: true,
       workspace: "./ios/#{PROJECT_NAME}.xcworkspace"
     )
 
     pilot(
       skip_waiting_for_build_processing: true,
-      api_key_path: "fastlane/keys/appstoreconnect-key.json"
-      # notify_external_testers: false
+      api_key_path: api_key_path
     )
   end
 
-  desc "Install on connected device"
+  desc "Build and install Senin.me on a connected iOS device"
   lane :install do
+    team_id = required_env!("SENINME_IOS_TEAM_ID")
+
+    update_code_signing_settings(
+      use_automatic_signing: true,
+      path: "./ios/#{PROJECT_NAME}.xcodeproj",
+      team_id: team_id,
+      targets: [PROJECT_NAME, "ShareExtension"]
+    )
+
+    seninme_match("adhoc")
+
     gym(
       scheme: PROJECT_NAME,
       export_method: "ad-hoc",
-      export_options: {
-        provisioningProfiles: {
-          "org.discourse.DiscourseApp" => "match AdHoc org.discourse.DiscourseApp 1776778144",
-          "org.discourse.DiscourseApp.ShareExtension" => "match AdHoc org.discourse.DiscourseApp.ShareExtension 1776778146"
-        }
-      },
+      export_team_id: team_id,
       clean: true,
       workspace: "./ios/#{PROJECT_NAME}.xcworkspace"
     )
@@ -207,35 +116,33 @@ platform :ios do
 end
 
 platform :android do
-  before_all do
-    increment_version_code(
-      gradle_file_path: "android/app/build.gradle"
-    )
-  end
-
-  desc "Build APK and install on device"
+  desc "Build and install a signed Senin.me release APK"
   lane :install do
     gradle(
       task: "assemble",
       build_type: "Release",
-      project_dir: "android/"
+      project_dir: "android/",
+      properties: android_signing_properties
     )
 
-    # adb(command: "install android/app/build/outputs/apk/debug/app-debug.apk")
-    adb(command: "install android/app/build/outputs/apk/release/app-release.apk")
+    adb(command: "install -r android/app/build/outputs/apk/release/app-release.apk")
   end
 
-  desc "Submit a build to Google Play Store"
+  desc "Submit a signed Senin.me bundle to Google Play"
   lane :release do
+    increment_version_code(gradle_file_path: "android/app/build.gradle")
+
     gradle(
       task: "bundle",
       build_type: "Release",
-      project_dir: "android/"
+      project_dir: "android/",
+      properties: android_signing_properties
     )
 
     upload_to_play_store(
-      track: "alpha",
-      json_key: "fastlane/google-play-api-secret.json",
+      package_name: ANDROID_PACKAGE_NAME,
+      track: ENV.fetch("SENINME_PLAY_TRACK", "internal"),
+      json_key: required_env!("SENINME_GOOGLE_PLAY_JSON_KEY"),
       skip_upload_apk: true
     )
   end

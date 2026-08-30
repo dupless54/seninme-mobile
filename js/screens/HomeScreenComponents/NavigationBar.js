@@ -61,13 +61,15 @@ const NavigationBar = props => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}> 
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.titleContainer}>
         <TouchableHighlight
           underlayColor={'transparent'}
           onPress={() => Linking.openURL(APP_CONFIG.defaultSiteUrl)}
         >
-          <Text style={[styles.title, { color: theme.grayTitle }]}>Senin.me</Text>
+          <Text style={[styles.title, { color: theme.grayTitle }]}>
+            {APP_CONFIG.appName}
+          </Text>
         </TouchableHighlight>
       </View>
       {renderCogButton()}

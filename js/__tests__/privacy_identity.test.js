@@ -19,13 +19,15 @@ describe('Senin.me mobile privacy identity', () => {
   test('keeps inherited sensitive Android permissions removed', () => {
     const manifest = read('android/app/src/main/AndroidManifest.xml');
 
-    ['READ_EXTERNAL_STORAGE', 'WRITE_EXTERNAL_STORAGE', 'READ_PHONE_STATE'].forEach(
-      permission => {
-        expect(manifest).toContain(
-          `android:name="android.permission.${permission}" tools:node="remove"`,
-        );
-      },
-    );
+    [
+      'READ_EXTERNAL_STORAGE',
+      'WRITE_EXTERNAL_STORAGE',
+      'READ_PHONE_STATE',
+    ].forEach(permission => {
+      expect(manifest).toContain(
+        `android:name="android.permission.${permission}" tools:node="remove"`,
+      );
+    });
   });
 
   test('declares no app tracking in the iOS privacy manifest', () => {

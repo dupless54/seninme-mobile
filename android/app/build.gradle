@@ -85,9 +85,3 @@ dependencies {
 
     implementation 'org.jetbrains:annotations:16.0.2'
 }
-
-// Remote push is disabled until the Senin.me Firebase project is configured.
-// A matching google-services.json enables the Google Services plugin automatically.
-if (file('google-services.json').exists()) {
-    apply plugin: 'com.google.gms.google-services'
-}

@@ -6,12 +6,26 @@ on:
       - main
   pull_request:
 
+concurrency:
+  group: ios-tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  ios-iphone-tests:
-    runs-on: macos-15
+  ios-tests:
+    # Stacked PRs are validated when they are retargeted to main. This avoids
+    # consuming scarce macOS runners for every intermediate stack level while
+    # preserving exact-head iOS coverage at the merge boundary.
+    if: github.event_name == 'push' || github.base_ref == 'main'
+    # macos-14 remains supported until 2026-11-02 and currently provides a
+    # broader Intel runner pool. Pin Xcode 16.2 below so iPhone 16 Pro and
+    # iPad (10th generation) run against the bundled iOS 18.2 simulator.
+    runs-on: macos-14
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+
+      - name: Select Xcode 16.2
+        run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -53,56 +67,6 @@ jobs:
       - name: Detox iPhone tests
         run: yarn detox test --configuration ios.sim.release --cleanup --record-logs all
 
-      - name: Upload artifacts
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: detox-artifacts-iphone
-          path: artifacts
-
-  ios-ipad-tests:
-    runs-on: macos-15
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 24
-          cache: yarn
-
-      - name: Install Yarn dependencies
-        run: yarn
-
-      - name: Install macOS dependencies
-        run: |
-          brew tap wix/brew
-          brew trust wix/brew
-          brew install applesimutils
-        env:
-          HOMEBREW_NO_AUTO_UPDATE: 1
-          HOMEBREW_NO_INSTALL_CLEANUP: 1
-
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          bundler-cache: true
-
-      - name: Install CocoaPods
-        run: cd ios ; pod install ; cd -
-
-      - name: Detox build
-        run: |
-          xcodebuild -workspace ios/Discourse.xcworkspace \
-            -scheme Discourse \
-            -configuration Release \
-            -sdk iphonesimulator \
-            -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath ios/build \
-            -quiet \
-            build
-
       - name: Boot iPad simulator
         run: |
           xcrun simctl boot 'iPad (10th generation)' || true
@@ -115,5 +79,5 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: detox-artifacts-ipad
+          name: detox-artifacts-ios
           path: artifacts

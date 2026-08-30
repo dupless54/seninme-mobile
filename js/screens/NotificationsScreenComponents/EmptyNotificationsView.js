@@ -37,7 +37,7 @@ class EmptyNotificationsView extends React.Component {
               { backgroundColor: theme.blueCallToAction },
             ]}
           >
-            <Text style={[styles.actionText, { color: theme.buttonTextColor }]}> 
+            <Text style={[styles.actionText, { color: theme.buttonTextColor }]}>
               {this.props.actionLabel}
             </Text>
           </TouchableOpacity>

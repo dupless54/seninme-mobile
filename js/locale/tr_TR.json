@@ -24,7 +24,7 @@
   "incorrect_url": "Üzgünüz, %{term} bir Discourse forumu için doğru bir URL değil veya mobil API'leri desteklemiyor, sahibinin Discourse'u en son sürüme yükseltmesini sağlayın!",
   "cannot_load_url": "Bu URL, DiscourseHub'a eklenemedi.",
   "last_updated": "Son Güncelleme:",
-  "liked": "gönderilerinizden %{count} tanesini beğendi",
+  "liked": "gönderilerinizden %{count} tanesini beğendi",
   "liked_two_users": "%{user1} ve %{user2}",
   "liked_more": {
     "one": "%{user1}, %{user2} ve %{count} kişi daha",
@@ -56,7 +56,7 @@
   "term_placeholder_single_site": "Topluluk URL'sini girin",
   "please_wait": "Lütfen bekleyin...",
   "settings": "Ayarlar",
-  "discover": "Keşfedin",
+  "discover": "Keşfet",
   "home": "Ana Sayfa",
   "back": "Geri",
   "site_added": "🎉 Site Ana ekrana eklendi!",
@@ -105,5 +105,17 @@
   "community_recent_topics": "Gündemdeki Konular",
   "oops": "Oops, bir sorun oluştu.",
   "still_loading": "Hala yükleniyor...",
-  "tag_label_programming_language": "programlama"
+  "tag_label_programming_language": "programlama",
+  "seninme_discover_title": "Senin.me'yi keşfet",
+  "seninme_discover_description": "Toplulukta öne çıkan içeriklere, kategorilere ve aramaya hızlıca ulaşın.",
+  "seninme_discover_popular": "Popüler",
+  "seninme_discover_popular_description": "Toplulukta en çok ilgi gören konuları görüntüleyin.",
+  "seninme_discover_latest": "Son Konular",
+  "seninme_discover_latest_description": "Senin.me'de yeni açılan ve güncellenen konulara göz atın.",
+  "seninme_discover_categories": "Kategoriler",
+  "seninme_discover_categories_description": "İlgi alanınıza göre topluluk bölümlerini keşfedin.",
+  "seninme_discover_tags": "Etiketler",
+  "seninme_discover_tags_description": "Konuları etiketler üzerinden filtreleyin ve keşfedin.",
+  "seninme_discover_search": "Ara",
+  "seninme_discover_search_description": "Senin.me içindeki konu, gönderi ve içerikleri arayın."
 }

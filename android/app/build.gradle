@@ -15,6 +15,7 @@ react {
 def enableProguardInReleaseBuilds = false
 
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
+def appVersionName = project.findProperty('MYAPP_VERSION') ?: '2.2.3'
 
 def releaseSigningAvailable =
     project.hasProperty('MYAPP_RELEASE_STORE_FILE') &&
@@ -34,7 +35,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         multiDexEnabled true
         versionCode 243
-        versionName MYAPP_VERSION
+        versionName appVersionName
     }
 
     signingConfigs {

@@ -27,7 +27,9 @@ const appIconContents = readText(
 
 describe('Senin.me application branding', () => {
   test('keeps user-visible iOS metadata on Senin.me', () => {
-    expect(iosInfo).toContain('<key>CFBundleName</key>\n\t<string>Senin.me</string>');
+    expect(iosInfo).toContain(
+      '<key>CFBundleName</key>\n\t<string>Senin.me</string>',
+    );
     expect(shareInfo).toContain(
       '<key>CFBundleDisplayName</key>\n\t<string>Senin.me</string>',
     );
@@ -50,7 +52,11 @@ describe('Senin.me application branding', () => {
   });
 
   test('ships Senin.me iOS app icons in every supported appearance', () => {
-    const filenames = ['seninme.png', 'seninme_dark.png', 'seninme_tinted.png'];
+    const filenames = [
+      'seninme.png',
+      'seninme_dark.png',
+      'seninme_tinted.png',
+    ];
 
     expect(appIconContents).not.toContain('discourse');
 

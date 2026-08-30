@@ -145,5 +145,9 @@
   "settings_terms": "Terms of Service",
   "settings_about": "About Senin.me",
   "settings_appearance_section": "Appearance",
-  "settings_version": "Senin.me %{version} (%{build})"
+  "settings_version": "Senin.me %{version} (%{build})",
+  "single_site_recovery_loading": "Preparing your Senin.me community.",
+  "single_site_recovery_connecting": "Connecting to Senin.me…",
+  "single_site_recovery_description": "Senin.me could not be reached. Check your connection and try again.",
+  "single_site_recovery_retry": "Try again"
 }

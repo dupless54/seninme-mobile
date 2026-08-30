@@ -1,0 +1,43 @@
+name: Temporary WebView Formatter
+
+on:
+  push:
+    branches:
+      - feature/seninme-webview-phase-7
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/seninme-webview-phase-7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn
+
+      - name: Format Phase 7 screens
+        run: >-
+          yarn prettier --write
+          js/screens/NotificationsScreen.js
+          js/screens/NotificationsScreenComponents/EmptyNotificationsView.js
+          js/screens/WebViewScreenComponents/WebViewComponent.js
+
+      - name: Commit formatter output and remove workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/temporary-format-webview.yml
+          git add js/screens/NotificationsScreen.js js/screens/NotificationsScreenComponents/EmptyNotificationsView.js js/screens/WebViewScreenComponents/WebViewComponent.js
+          git commit -m "STYLE: apply repository Prettier to Phase 7"
+          git push origin HEAD:feature/seninme-webview-phase-7

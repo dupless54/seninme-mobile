@@ -3,50 +3,24 @@ apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 
 /**
- * This is the configuration block to customize your React Native Android app.
- * By default you don't need to apply any configuration, just uncomment the lines you need.
+ * React Native application configuration.
  */
 react {
-    /* Folders */
-    //   The root of your project, i.e. where "package.json" lives. Default is '../..'
-    // root = file("../../")
-    //   The folder where the react-native NPM package is. Default is ../../node_modules/react-native
-    // reactNativeDir = file("../../node_modules/react-native")
-    //   The folder where the react-native Codegen package is. Default is ../../node_modules/@react-native/codegen
-    // codegenDir = file("../../node_modules/@react-native/codegen")
-    //   The cli.js file which is the React Native CLI entrypoint. Default is ../../node_modules/react-native/cli.js
-    // cliFile = file("../../node_modules/react-native/cli.js")
-
-    /* Variants */
-    //   The list of variants that are debuggable. For those we're going to
-    // skip the bundling of the JS bundle and assets. By default this is just 'debug'.
-    // debuggableVariants = ["liteDebug", "prodDebug"]
-
-    /* Bundling */
-    // nodeExecutableAndArgs = ["node"]
-    // bundleCommand = "ram-bundle"
-    // bundleConfig = file(../rn-cli.config.js)
-    // bundleAssetName = "MyApplication.android.bundle"
-    // entryFile = file("../js/MyApplication.android.js")
-    // extraPackagerArgs = []
-
-    /* Hermes Commands */
-    // hermesCommand = "$rootDir/my-custom-hermesc/bin/hermesc"
-    // hermesFlags = ["-O", "-output-source-map"]
-
-    /* Autolinking */
     autolinkLibrariesWithApp()
 }
 
 /**
- * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
+ * Set this to true to run Proguard on Release builds to minify the Java bytecode.
  */
 def enableProguardInReleaseBuilds = false
 
-/**
- * The preferred build flavor of JavaScriptCore (JSC)
- */
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
+
+def releaseSigningAvailable =
+    project.hasProperty('MYAPP_RELEASE_STORE_FILE') &&
+    project.hasProperty('MYAPP_RELEASE_STORE_PASSWORD') &&
+    project.hasProperty('MYAPP_RELEASE_KEY_ALIAS') &&
+    project.hasProperty('MYAPP_RELEASE_KEY_PASSWORD')
 
 android {
     namespace 'me.senin.mobile'
@@ -64,11 +38,13 @@ android {
     }
 
     signingConfigs {
-        release {
-            storeFile file(MYAPP_RELEASE_STORE_FILE)
-            storePassword MYAPP_RELEASE_STORE_PASSWORD
-            keyAlias MYAPP_RELEASE_KEY_ALIAS
-            keyPassword MYAPP_RELEASE_KEY_PASSWORD
+        if (releaseSigningAvailable) {
+            release {
+                storeFile file(MYAPP_RELEASE_STORE_FILE)
+                storePassword MYAPP_RELEASE_STORE_PASSWORD
+                keyAlias MYAPP_RELEASE_KEY_ALIAS
+                keyPassword MYAPP_RELEASE_KEY_PASSWORD
+            }
         }
     }
 
@@ -76,7 +52,9 @@ android {
         release {
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
-            signingConfig signingConfigs.release
+            if (releaseSigningAvailable) {
+                signingConfig signingConfigs.release
+            }
             manifestPlaceholders = [permissionName: "android.permission.SYSTEM_ALERT_WINDOW"]
         }
         debug {
@@ -90,7 +68,7 @@ repositories {
 }
 
 dependencies {
-    // The version of react-native is set by the React Native Gradle Plugin
+    // The version of react-native is set by the React Native Gradle Plugin.
     implementation("com.facebook.react:react-android")
 
     implementation 'androidx.multidex:multidex:2.0.1'
@@ -106,9 +84,8 @@ dependencies {
     implementation 'org.jetbrains:annotations:16.0.2'
 }
 
-// Senin.me remote push is intentionally disabled until our own Firebase
-// project is configured. Applying the Google Services plugin without a
-// matching google-services.json makes otherwise-valid local builds fail.
+// Remote push is disabled until the Senin.me Firebase project is configured.
+// A matching google-services.json enables the Google Services plugin automatically.
 if (file('google-services.json').exists()) {
     apply plugin: 'com.google.gms.google-services'
 }

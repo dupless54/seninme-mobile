@@ -2,7 +2,13 @@
 'use strict';
 
 import React, { useContext } from 'react';
-import { Platform, StyleSheet, Text, TouchableHighlight, View } from 'react-native';
+import {
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableHighlight,
+  View,
+} from 'react-native';
 import FontAwesome5 from '@react-native-vector-icons/fontawesome5';
 import { ThemeContext } from '../../ThemeContext';
 import APP_CONFIG from '../../app_config';

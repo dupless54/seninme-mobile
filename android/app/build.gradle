@@ -16,6 +16,7 @@ def enableProguardInReleaseBuilds = false
 
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 def appVersionName = project.findProperty('MYAPP_VERSION') ?: '2.2.3'
+def hermesEnabled = project.findProperty('hermesEnabled') ?: 'true'
 
 def releaseSigningAvailable =
     project.hasProperty('MYAPP_RELEASE_STORE_FILE') &&

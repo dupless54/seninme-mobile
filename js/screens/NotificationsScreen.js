@@ -88,10 +88,19 @@ class NotificationsScreen extends React.Component {
 
     this.setState({ connectedSites }, () => {
       if (connectedSites === 0) {
+        this._notification = null;
+        this._seenNotificationMap = null;
         this._refreshed = true;
-        this.setState({ dataSource: Immutable.List() }, () => {
-          this.removePlaceholder();
-        });
+        this.setState(
+          {
+            dataSource: Immutable.List(),
+            isRefreshing: false,
+            progress: 0,
+          },
+          () => {
+            this.removePlaceholder();
+          },
+        );
         return;
       }
 
@@ -327,8 +336,18 @@ class NotificationsScreen extends React.Component {
     this._fetchPromise = this._siteManager
       .notifications(notificationTypes, options)
       .then(notifications => {
-        this._notification = notifications;
         this._refreshed = true;
+
+        if (this._siteManager.connectedSitesCount() === 0) {
+          this._notification = null;
+          if (this._mounted) {
+            this.setState({ dataSource: Immutable.List(), progress: 0 });
+            this.removePlaceholder();
+          }
+          return;
+        }
+
+        this._notification = notifications;
 
         if (this._mounted) {
           if (this.state.progress !== 0) {

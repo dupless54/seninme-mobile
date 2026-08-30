@@ -1,6 +1,11 @@
-git_url("git@github.com:discourse-org/discourse-mobile-keys.git")
-git_branch('main')
+git_url(ENV.fetch("SENINME_MATCH_GIT_URL"))
+git_branch(ENV.fetch("SENINME_MATCH_GIT_BRANCH", "main"))
 storage_mode("git")
 
-username("team@discourse.org")
-team_id("6T3LU73T8S")
+app_identifier([
+  "me.senin.mobile",
+  "me.senin.mobile.ShareExtension",
+])
+
+username(ENV["SENINME_APPLE_ID"]) unless ENV["SENINME_APPLE_ID"].to_s.strip.empty?
+team_id(ENV["SENINME_IOS_TEAM_ID"]) unless ENV["SENINME_IOS_TEAM_ID"].to_s.strip.empty?

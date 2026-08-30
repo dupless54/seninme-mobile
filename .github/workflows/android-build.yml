@@ -36,4 +36,6 @@ jobs:
 
       - name: Build Android debug app
         working-directory: android
+        env:
+          GRADLE_OPTS: -Xmx4g -XX:MaxMetaspaceSize=1g -Dfile.encoding=UTF-8
         run: ./gradlew :app:assembleDebug --no-daemon

@@ -17,6 +17,8 @@ Before creating a device, TestFlight, or App Store build:
 4. Keep automatic signing enabled unless the Senin.me release pipeline is later configured with explicit managed profiles.
 5. Do not reuse Discourse.org provisioning profiles, certificates, or Team IDs.
 
+The committed Xcode project deliberately leaves `DEVELOPMENT_TEAM` unset. Automatic signing becomes release-usable only after a Senin.me-owned Apple Developer team is selected locally or injected by the release pipeline.
+
 ## Push notifications
 
 Remote push is intentionally disabled while the Senin.me push relay, Firebase/APNs configuration, and Discourse allowlist configuration are not available. The repository therefore does not currently request the `aps-environment` entitlement.

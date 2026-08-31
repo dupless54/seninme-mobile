@@ -33,4 +33,14 @@ describe('Senin.me white-label configuration', () => {
     expect(bootstrap).toContain('this._nonce = null;');
     expect(bootstrap).toContain('this._nonceSite = null;');
   });
+
+  test('sanitizes auth redirect parameters before legacy parsing', () => {
+    const app = read('js/seninme_app.js');
+
+    expect(app).toContain(
+      "const AUTH_REDIRECT_PARAMS = ['payload', 'otp', 'oneTimePassword']",
+    );
+    expect(app).toContain('buildLegacyAuthRedirectUrl(deepLink.params)');
+    expect(app).not.toContain('toLegacyDiscourseUrl(url)');
+  });
 });

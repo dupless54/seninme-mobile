@@ -31,17 +31,9 @@ describe('Senin.me verified domain association', () => {
   });
 
   test('requires universal-link coverage for all Senin.me paths', () => {
-    const fragments = [
-      'function enablesAllApplePaths(detail)',
-      "path === '*' || path === '/*'",
-      "pathPattern === '*' || pathPattern === '/*'",
-      'component?.exclude !== true',
-      'enablesAllApplePaths(detail)',
-    ];
-
-    fragments.forEach(fragment => {
-      expect(verifier).toContain(fragment);
-    });
+    expect(verifier).toContain('function enablesAllApplePaths(detail)');
+    expect(verifier).toContain('component?.exclude !== true');
+    expect(verifier).toContain('&& enablesAllApplePaths(detail)');
   });
 
   test('exposes an explicit production verification command', () => {

@@ -20,14 +20,35 @@ export const installPushPolicy = DiscourseClass => {
   installed = true;
 
   if (Platform.OS === 'android') {
+    const notificationPermission =
+      PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS;
     const originalRequest = PermissionsAndroid.request.bind(PermissionsAndroid);
+    const originalRequestMultiple =
+      PermissionsAndroid.requestMultiple.bind(PermissionsAndroid);
 
     PermissionsAndroid.request = (permission, rationale) => {
-      if (permission === PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS) {
+      if (permission === notificationPermission) {
         return Promise.resolve(PermissionsAndroid.RESULTS.DENIED);
       }
 
       return originalRequest(permission, rationale);
+    };
+
+    PermissionsAndroid.requestMultiple = permissions => {
+      const allowedPermissions = permissions.filter(
+        permission => permission !== notificationPermission,
+      );
+
+      if (allowedPermissions.length === 0) {
+        return Promise.resolve({
+          [notificationPermission]: PermissionsAndroid.RESULTS.DENIED,
+        });
+      }
+
+      return originalRequestMultiple(allowedPermissions).then(results => ({
+        ...results,
+        [notificationPermission]: PermissionsAndroid.RESULTS.DENIED,
+      }));
     };
   }
 

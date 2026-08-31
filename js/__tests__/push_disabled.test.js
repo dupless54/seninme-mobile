@@ -16,6 +16,7 @@ const reactNativeConfig = readText('react-native.config.js');
 const androidManifest = readText('android/app/src/main/AndroidManifest.xml');
 const androidRootGradle = readText('android/build.gradle');
 const androidAppGradle = readText('android/app/build.gradle');
+const iosInfoPlist = readText('ios/Discourse/Info.plist');
 
 describe('Senin.me disabled push policy', () => {
   test('keeps remote push disabled in application configuration', () => {
@@ -34,6 +35,8 @@ describe('Senin.me disabled push policy', () => {
     expect(pushPolicy).toContain(
       'DiscourseClass.prototype._handleNotification = function () {}',
     );
+    expect(iosInfoPlist).not.toContain('<string>fetch</string>');
+    expect(iosInfoPlist).not.toContain('<string>remote-notification</string>');
   });
 
   test('does not initialize Firebase Messaging while push is disabled', () => {

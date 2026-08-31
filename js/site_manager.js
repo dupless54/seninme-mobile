@@ -12,6 +12,7 @@ import DeviceInfo from 'react-native-device-info';
 import JSEncrypt from './../lib/jsencrypt';
 import randomBytes from './../lib/random-bytes';
 import i18n from 'i18n-js';
+import APP_CONFIG from './app_config';
 
 const { DiscourseKeyboardShortcuts } = NativeModules;
 const REFRESH_THROTTLE_MS = 5000;
@@ -21,9 +22,9 @@ class SiteManager {
   _subscribers = [];
   sites = [];
   activeSite = null;
-  customScheme = 'discourse';
-  urlScheme = 'discourse://auth_redirect';
-  deviceName = 'Discourse - Unknown Mobile Device';
+  customScheme = APP_CONFIG.customScheme;
+  urlScheme = APP_CONFIG.authRedirectUrl;
+  deviceName = `${APP_CONFIG.appName} - Unknown Mobile Device`;
   hotTopicsHidden = false;
   siteURLsHidden = false;
 
@@ -37,7 +38,7 @@ class SiteManager {
     });
 
     DeviceInfo.getDeviceName().then(name => {
-      this.deviceName = `Discourse - ${name}`;
+      this.deviceName = `${APP_CONFIG.appName} - ${name}`;
     });
   }
 
@@ -437,21 +438,24 @@ class SiteManager {
           return this.generateNonce(site);
         })
         .then(nonce => {
-          let basePushUrl = 'https://api.discourse.org';
-          //let basePushUrl = "http://l.discourse:3000"
-
+          const pushBaseUrl = APP_CONFIG.pushBaseUrl
+            ? APP_CONFIG.pushBaseUrl.replace(/\/+$/, '')
+            : null;
           let scopes = 'notifications,session_info,one_time_password';
 
           let params = {
             scopes: scopes,
             client_id: clientId,
             nonce: nonce,
-            push_url: basePushUrl + '/api/publish_' + Platform.OS,
             auth_redirect: this.urlScheme,
             application_name: this.deviceName,
             public_key: this.rsaKeys.public,
             discourse_app: 1,
           };
+
+          if (pushBaseUrl) {
+            params.push_url = `${pushBaseUrl}/api/publish_${Platform.OS}`;
+          }
 
           return `${site.url}/user-api-key/new?${this.serializeParams(params)}`;
         }),

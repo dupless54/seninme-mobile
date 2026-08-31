@@ -117,5 +117,17 @@
   "seninme_discover_tags": "Tags",
   "seninme_discover_tags_description": "Browse and filter discussions by topic tags.",
   "seninme_discover_search": "Search",
-  "seninme_discover_search_description": "Search topics, posts and other content inside Senin.me."
+  "seninme_discover_search_description": "Search topics, posts and other content inside Senin.me.",
+  "home_community_label": "Your community",
+  "home_feed_description": "See what is happening across Senin.me and jump back into the conversations that matter to you.",
+  "home_connect": "Sign in to Senin.me",
+  "home_quick_access": "Quick access",
+  "home_latest": "Latest",
+  "home_new": "New",
+  "home_unread": "Unread",
+  "home_categories": "Categories",
+  "home_chat": "Chat",
+  "home_trending": "Trending now",
+  "home_trending_description": "Topics getting attention across the community.",
+  "home_see_all": "See all"
 }

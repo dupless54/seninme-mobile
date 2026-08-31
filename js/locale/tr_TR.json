@@ -117,5 +117,17 @@
   "seninme_discover_tags": "Etiketler",
   "seninme_discover_tags_description": "Konuları etiketler üzerinden filtreleyin ve keşfedin.",
   "seninme_discover_search": "Ara",
-  "seninme_discover_search_description": "Senin.me içindeki konu, gönderi ve içerikleri arayın."
+  "seninme_discover_search_description": "Senin.me içindeki konu, gönderi ve içerikleri arayın.",
+  "home_community_label": "Topluluğun",
+  "home_feed_description": "Senin.me'de neler olduğunu gör, ilgini çeken sohbetlere ve güncel konulara hızla geri dön.",
+  "home_connect": "Senin.me hesabınla giriş yap",
+  "home_quick_access": "Hızlı erişim",
+  "home_latest": "Son Konular",
+  "home_new": "Yeni",
+  "home_unread": "Okunmamış",
+  "home_categories": "Kategoriler",
+  "home_chat": "Sohbet",
+  "home_trending": "Şu an gündemde",
+  "home_trending_description": "Toplulukta şu anda en çok ilgi gören konular.",
+  "home_see_all": "Tümünü gör"
 }

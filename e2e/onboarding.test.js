@@ -31,6 +31,12 @@ describe.each([['en'], ['fr']])(`Single-site shell (locale: %s)`, locale => {
     await expect(element(by.text(i18n.t('home')))).toBeVisible();
   });
 
+  it('should render the Senin.me native home feed', async () => {
+    await expect(element(by.id('seninme-home-feed'))).toBeVisible();
+    await expect(element(by.id('seninme-home-latest'))).toBeVisible();
+    await expect(element(by.id('seninme-home-categories'))).toBeVisible();
+  });
+
   it('should show Senin.me-only discovery actions', async () => {
     await element(by.text(i18n.t('discover'))).tap();
     await expect(element(by.id('seninme-discover-popular'))).toBeVisible();
@@ -39,8 +45,8 @@ describe.each([['en'], ['fr']])(`Single-site shell (locale: %s)`, locale => {
 
   it('should show the Notifications screen', async () => {
     await element(by.text(i18n.t('notifications'))).tap();
-    await expect(element(by.text(i18n.t('replies')))).toBeVisible();
+    await expect(element(by.id('seninme-notifications-header'))).toBeVisible();
     await element(by.text(i18n.t('home'))).tap();
-    await expect(element(by.id('seninme-home-brand'))).toBeVisible();
+    await expect(element(by.id('seninme-home-feed'))).toBeVisible();
   });
 });

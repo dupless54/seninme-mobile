@@ -23,6 +23,11 @@ jobs:
           node-version: 24
           cache: yarn
 
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+
       - name: Yarn install
         run: yarn
 
@@ -33,3 +38,9 @@ jobs:
       - name: Prettier
         if: ${{ !cancelled() }}
         run: yarn prettier
+
+      - name: Fastlane Ruby syntax
+        if: ${{ !cancelled() }}
+        run: |
+          ruby -c fastlane/Fastfile
+          ruby -c fastlane/Matchfile

@@ -280,7 +280,10 @@ const TopicList = props => {
   }
 
   return (
-    <View style={{ ...styles.container, borderBottomColor: theme.grayBorder }}>
+    <View
+      testID="topic-list"
+      style={{ ...styles.container, borderBottomColor: theme.grayBorder }}
+    >
       {loadCompleted ? _renderItems() : _renderPlaceholder()}
     </View>
   );

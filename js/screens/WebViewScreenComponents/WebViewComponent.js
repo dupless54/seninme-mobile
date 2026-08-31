@@ -208,9 +208,14 @@ class WebViewComponent extends React.Component {
   }
 
   _shouldStartLoad(request) {
-    // onShouldStartLoadWithRequest is sometimes triggered by ajax requests
-    // (ads, etc.). Avoid treating those as top-level external navigation.
-    if (request.url !== request.mainDocumentURL) {
+    // mainDocumentURL is an iOS-only WebView field. On iOS, ignore subframe
+    // requests here; on Android the callback itself represents navigation and
+    // must still pass through the Senin.me top-level boundary checks below.
+    if (
+      Platform.OS === 'ios' &&
+      request.mainDocumentURL &&
+      request.url !== request.mainDocumentURL
+    ) {
       return true;
     }
 
@@ -278,7 +283,11 @@ class WebViewComponent extends React.Component {
         )}
         {this.state.layoutCalculated && (
           <WebView
-            originWhitelist={['https://*', 'about:srcdoc']}
+            originWhitelist={[
+              'https://*',
+              `${APP_CONFIG.customScheme}://*`,
+              'about:srcdoc',
+            ]}
             style={{
               marginTop: -1, // hacky fix to a 1px overflow just above header
               backgroundColor: this.state.headerBg,

@@ -59,6 +59,7 @@ const NavigationBar = props => {
       <View style={styles.titleContainer}>
         <TouchableHighlight
           underlayColor={'transparent'}
+          testID="seninme-home-brand"
           onPress={props.onDidPressBrand}
         >
           <Text style={[styles.title, { color: theme.grayTitle }]}>

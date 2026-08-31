@@ -2,80 +2,98 @@
 //  ShareViewController.swift
 //  ShareExtension
 //
-//  Shows a Discourse icon in the iOS share sheet
-// and lets users send URLs to the app.
+//  Sends shared URLs and text links to the Senin.me app.
 //
 
-import UIKit
 import MobileCoreServices
+import UIKit
 
 extension NSItemProvider {
-    var isText: Bool { return hasItemConformingToTypeIdentifier(String(kUTTypeText)) }
-    var isUrl: Bool { return hasItemConformingToTypeIdentifier(String(kUTTypeURL)) }
+    var isText: Bool { hasItemConformingToTypeIdentifier(String(kUTTypeText)) }
+    var isUrl: Bool { hasItemConformingToTypeIdentifier(String(kUTTypeURL)) }
 
     func processText(completion: CompletionHandler?) {
-        loadItem(forTypeIdentifier: String(kUTTypeText), options: nil, completionHandler: completion)
+        loadItem(
+            forTypeIdentifier: String(kUTTypeText),
+            options: nil,
+            completionHandler: completion
+        )
     }
 
     func processUrl(completion: CompletionHandler?) {
-        loadItem(forTypeIdentifier: String(kUTTypeURL), options: nil, completionHandler: completion)
+        loadItem(
+            forTypeIdentifier: String(kUTTypeURL),
+            options: nil,
+            completionHandler: completion
+        )
     }
 }
 
 class ShareViewController: UIViewController {
-  override func viewDidLoad() {
-    super.viewDidLoad()
+    override func viewDidLoad() {
+        super.viewDidLoad()
 
-    guard let extensionContext = extensionContext,
-          let inputItems = extensionContext.inputItems as? [NSExtensionItem] else {
-        return
+        guard let extensionContext,
+              let inputItems = extensionContext.inputItems as? [NSExtensionItem] else {
+            return
+        }
+
+        for inputItem in inputItems {
+            guard let attachments = inputItem.attachments else { continue }
+
+            for attachment in attachments {
+                if attachment.isUrl {
+                    attachment.processUrl { [weak self] object, error in
+                        guard error == nil, let url = object as? URL else { return }
+                        self?.openInSeninMe(url)
+                    }
+                } else if attachment.isText {
+                    attachment.processText { [weak self] object, error in
+                        guard error == nil,
+                              let text = object as? String,
+                              let url = URL(string: text) else {
+                            return
+                        }
+                        self?.openInSeninMe(url)
+                    }
+                }
+            }
+        }
+
+        UIView.animate(
+            withDuration: 0.2,
+            delay: 0,
+            options: [],
+            animations: {
+                self.view.alpha = 0
+            },
+            completion: { _ in
+                self.extensionContext?.completeRequest(
+                    returningItems: [],
+                    completionHandler: nil
+                )
+            }
+        )
     }
 
-    for inputItem in inputItems {
-        guard let attachments = inputItem.attachments else { continue }
+    private func openInSeninMe(_ sharedUrl: URL) {
+        var components = URLComponents()
+        components.scheme = "seninme"
+        components.host = "share"
+        components.queryItems = [
+            URLQueryItem(name: "sharedUrl", value: sharedUrl.absoluteString)
+        ]
 
-        for attachment in attachments {
-          if attachment.isUrl {
-              attachment.processUrl { obj, err in
-                  guard err == nil else {
-                      return
-                  }
+        guard let appUrl = components.url else { return }
 
-                  guard let url = obj as? URL else {
-                      return
-                  }
+        DispatchQueue.main.async {
+            guard let application = UIApplication.value(
+                forKeyPath: #keyPath(UIApplication.shared)
+            ) as? UIApplication else {
+                return
+            }
 
-                  DispatchQueue.main.async {
-                    if let application = UIApplication.value(forKeyPath: #keyPath(UIApplication.shared)) as? UIApplication {
-                        application.open(URL(string: "discourse://share?sharedUrl=\(url)")!, options: [:], completionHandler: nil)
-                    }
-                  }
-              }
-          } else if attachment.isText {
-              attachment.processText { obj, err in
-                  guard err == nil else {
-                      return
-                  }
-
-                  guard let url = URL(string: obj as! String) else {
-                      return
-                  }
-
-                  DispatchQueue.main.async {
-                    if let application = UIApplication.value(forKeyPath: #keyPath(UIApplication.shared)) as? UIApplication {
-                        application.open(URL(string: "discourse://share?sharedUrl=\(url)")!, options: [:], completionHandler: nil)
-                    }
-                  }
-              }
-          }
-      }
+            application.open(appUrl, options: [:], completionHandler: nil)
+        }
     }
-
-    UIView.animate(withDuration: 0.2, delay: 0, options: [], animations: {
-        self.view.alpha = 0
-    }, completion: { _ in
-        self.extensionContext?.completeRequest(returningItems: [], completionHandler: nil)
-    })
-  }
-
 }

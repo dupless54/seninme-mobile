@@ -3,7 +3,6 @@
 
 import React, { useContext } from 'react';
 import {
-  Linking,
   Platform,
   StyleSheet,
   Text,
@@ -65,7 +64,8 @@ const NavigationBar = props => {
       <View style={styles.titleContainer}>
         <TouchableHighlight
           underlayColor={'transparent'}
-          onPress={() => Linking.openURL(APP_CONFIG.defaultSiteUrl)}
+          testID="seninme-home-brand"
+          onPress={props.onDidPressBrand}
         >
           <Text style={[styles.title, { color: theme.grayTitle }]}>
             {APP_CONFIG.appName}

@@ -105,5 +105,17 @@
   "community_recent_topics": "Hot Topics",
   "oops": "Oops, something went wrong.",
   "still_loading": "Still loading...",
-  "tag_label_programming_language": "programming"
+  "tag_label_programming_language": "programming",
+  "seninme_discover_title": "Discover Senin.me",
+  "seninme_discover_description": "Jump into popular content, categories, tags and search across the community.",
+  "seninme_discover_popular": "Popular",
+  "seninme_discover_popular_description": "See the topics getting the most attention across the community.",
+  "seninme_discover_latest": "Latest Topics",
+  "seninme_discover_latest_description": "Browse newly created and recently updated discussions on Senin.me.",
+  "seninme_discover_categories": "Categories",
+  "seninme_discover_categories_description": "Explore community sections based on what interests you.",
+  "seninme_discover_tags": "Tags",
+  "seninme_discover_tags_description": "Browse and filter discussions by topic tags.",
+  "seninme_discover_search": "Search",
+  "seninme_discover_search_description": "Search topics, posts and other content inside Senin.me."
 }

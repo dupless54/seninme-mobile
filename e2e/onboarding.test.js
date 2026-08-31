@@ -26,20 +26,21 @@ describe.each([['en'], ['fr']])(`Single-site shell (locale: %s)`, locale => {
   });
 
   it('should boot as the Senin.me single-site app', async () => {
-    await expect(element(by.text('Senin.me'))).toBeVisible();
+    await expect(element(by.id('seninme-home-brand'))).toBeVisible();
     await expect(element(by.id('nav-plus-icon'))).not.toExist();
     await expect(element(by.text(i18n.t('home')))).toBeVisible();
   });
 
-  it('should show the Discover screen', async () => {
+  it('should show Senin.me-only discovery actions', async () => {
     await element(by.text(i18n.t('discover'))).tap();
-    await expect(element(by.text(i18n.t('discover_pick_tag')))).toBeVisible();
+    await expect(element(by.id('seninme-discover-popular'))).toBeVisible();
+    await expect(element(by.id('seninme-discover-search'))).toBeVisible();
   });
 
   it('should show the Notifications screen', async () => {
     await element(by.text(i18n.t('notifications'))).tap();
     await expect(element(by.text(i18n.t('replies')))).toBeVisible();
     await element(by.text(i18n.t('home'))).tap();
-    await expect(element(by.text('Senin.me'))).toBeVisible();
+    await expect(element(by.id('seninme-home-brand'))).toBeVisible();
   });
 });

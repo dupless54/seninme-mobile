@@ -394,10 +394,7 @@ class NotificationsScreen extends React.Component {
             this.removePlaceholder();
 
             setTimeout(() => {
-              if (
-                this._mounted &&
-                fetchGeneration === this._fetchGeneration
-              ) {
+              if (this._mounted && fetchGeneration === this._fetchGeneration) {
                 this.setState({ progress: 0 });
               }
             }, 400);

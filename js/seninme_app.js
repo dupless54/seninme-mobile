@@ -19,10 +19,7 @@ const buildLegacyAuthRedirectUrl = params => {
   const query = AUTH_REDIRECT_PARAMS.filter(
     key => typeof params[key] === 'string' && params[key].length > 0,
   )
-    .map(
-      key =>
-        `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`,
-    )
+    .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
     .join('&');
 
   return `discourse://auth_redirect${query ? `?${query}` : ''}`;

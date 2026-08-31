@@ -34,10 +34,12 @@ Current values:
 - App name: `Senin.me`
 - Site URL: `https://senin.me`
 - Android application ID: `me.senin.mobile`
+- iOS application bundle ID: `me.senin.mobile`
+- iOS Share Extension bundle ID: `me.senin.mobile.ShareExtension`
 - URL scheme: `seninme`
 - Auth callback: `seninme://auth_redirect`
 
-The iOS bundle identifier and Apple Team/provisioning values still require the Senin.me Apple Developer signing configuration before they can be finalized safely.
+The Senin.me bundle identifiers are fixed in the project. The Apple Developer Team ID, signing certificates, and provisioning profiles still require the Senin.me-owned Apple Developer configuration before device, TestFlight, or App Store builds can be produced safely.
 
 ## Deep links and sharing
 
@@ -59,7 +61,7 @@ The file must authorize package `me.senin.mobile` using the SHA-256 fingerprint 
 
 ### iOS Universal Links
 
-iOS is scoped to the `senin.me` associated domain. Universal Links require Senin.me to serve a valid Apple App Site Association file for the final Apple Team ID and bundle identifier. Finalize this only after the Senin.me Apple Developer signing identity is known.
+iOS is scoped to the `senin.me` associated domain. Universal Links require Senin.me to serve a valid Apple App Site Association file authorizing the fixed `me.senin.mobile` bundle ID under the real Senin.me Apple Developer Team ID. Do not publish a placeholder Team ID.
 
 ## Validation
 

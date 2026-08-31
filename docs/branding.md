@@ -35,4 +35,6 @@ The iOS asset catalog contains three 1024 x 1024 app-icon renders:
 
 Treat `branding/seninme-app-icon.svg` as the source of truth. When the brand mark changes, regenerate all iOS icon appearances from the SVG at exactly 1024 x 1024 and keep the branding regression test green.
 
+The branding regression test validates the PNG signature and exact 1024 x 1024 dimensions for every iOS appearance, in addition to checking that the asset catalog no longer references inherited Discourse artwork.
+
 Do not restore inherited `discourse*.png` application icons, the old Discourse launch mark, or user-visible `Discourse` bundle names.

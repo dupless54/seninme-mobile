@@ -50,6 +50,8 @@ export default function SingleSiteRecovery({ loading, onRetry }) {
         ) : (
           <TouchableOpacity
             testID="seninme-site-retry"
+            accessibilityLabel={i18n.t('single_site_recovery_retry')}
+            accessibilityRole="button"
             activeOpacity={0.75}
             onPress={onRetry}
             style={styles.retryButton}

@@ -38,6 +38,14 @@ describe('Senin.me single-site recovery', () => {
     expect(bootstrap).toContain('Ignoring redirected non-Senin.me site');
   });
 
+  test('serializes retry attempts while recovery is already in flight', () => {
+    const bootstrap = read('js/seninme_bootstrap.js');
+
+    expect(bootstrap).toContain('if (!APP_CONFIG.singleSite || this._loading)');
+    expect(bootstrap).toContain('this._loading = true;');
+    expect(bootstrap).toContain('this._loading = false;');
+  });
+
   test('has localized recovery labels', () => {
     const en = JSON.parse(read('js/locale/en.json'));
     const tr = JSON.parse(read('js/locale/tr_TR.json'));

@@ -21,9 +21,9 @@ describe('Topic list', () => {
   });
 
   it('should show the Senin.me hot topics list', async () => {
-    await expect(element(by.text('Senin.me'))).toBeVisible();
+    await expect(element(by.id('seninme-home-brand'))).toBeVisible();
     await expect(element(by.text(i18n.t('home')))).toBeVisible();
-    await element(by.text(i18n.t('hot_topics'))).tap();
+    await expect(element(by.text(i18n.t('home_trending')))).toBeVisible();
     await expect(element(by.id('topic-list'))).toExist();
   });
 });

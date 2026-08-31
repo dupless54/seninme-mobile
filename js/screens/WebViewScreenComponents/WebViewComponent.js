@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Alert,
   AppState,
+  BackHandler,
   Linking,
   Platform,
   Settings,
@@ -21,6 +22,8 @@ import chroma from 'chroma-js';
 import SafariView from 'react-native-safari-view';
 import i18n from 'i18n-js';
 import Site from '../../site';
+import APP_CONFIG from '../../app_config';
+import { isSeninMeUrl } from '../../seninme_links';
 import { ThemeContext } from '../../ThemeContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BlurView } from '@react-native-community/blur';
@@ -34,6 +37,7 @@ export const withInsets = Component => {
 };
 
 const MAX_RELOAD_ATTEMPTS = 1;
+const SENINME_USER_AGENT = APP_CONFIG.appName;
 
 class WebViewComponent extends React.Component {
   constructor(props) {
@@ -65,6 +69,20 @@ class WebViewComponent extends React.Component {
       this._resetScrollOverflow();
     };
 
+    this._handleHardwareBack = () => {
+      if (this.state.canGoBack && this.webview) {
+        this.webview.goBack();
+        return true;
+      }
+
+      if (this.props.navigation.canGoBack()) {
+        this.props.navigation.goBack();
+        return true;
+      }
+
+      return false;
+    };
+
     this.state = {
       progress: 0,
       webviewReloadAttempts: 0,
@@ -73,12 +91,13 @@ class WebViewComponent extends React.Component {
       barStyle: 'dark-content', // default
       nudgeColor: 'black', // default
       errorData: null,
-      userAgentSuffix: 'DiscourseHub',
+      userAgentSuffix: SENINME_USER_AGENT,
       layoutCalculated: false,
       isLandscape: false,
       webviewUrl: this.props.url,
       authProcessActive: false,
       scrollOverflow: 0,
+      canGoBack: false,
     };
   }
 
@@ -93,6 +112,13 @@ class WebViewComponent extends React.Component {
       'change',
       this._handleAppStateChange,
     );
+
+    if (Platform.OS === 'android') {
+      this.backHandlerSubscription = BackHandler.addEventListener(
+        'hardwareBackPress',
+        this._handleHardwareBack,
+      );
+    }
   }
 
   componentDidUpdate() {
@@ -121,8 +147,8 @@ class WebViewComponent extends React.Component {
     this.setState({
       userAgentSuffix:
         width > 767
-          ? `DiscourseHub ${this.props.screenProps.deviceId}`
-          : 'DiscourseHub',
+          ? `${SENINME_USER_AGENT} ${this.props.screenProps.deviceId}`
+          : SENINME_USER_AGENT,
       layoutCalculated: true,
       isLandscape: width > height,
     });
@@ -159,11 +185,84 @@ class WebViewComponent extends React.Component {
     return Math.round(this.velocity);
   }
 
+  _openExternalUrl(url) {
+    Linking.canOpenURL(url)
+      .then(canOpen => {
+        if (!canOpen) {
+          return;
+        }
+
+        const useSVC =
+          Platform.OS === 'ios' && Settings.get('external_links_svc');
+        if (useSVC) {
+          if (!this.safariViewVisible) {
+            SafariView.show({ url });
+          }
+        } else {
+          Linking.openURL(url);
+        }
+      })
+      .catch(e => {
+        console.log('Linking.canOpenURL failed with ' + e);
+      });
+  }
+
+  _shouldStartLoad(request) {
+    // mainDocumentURL is an iOS-only WebView field. On iOS, ignore subframe
+    // requests here; on Android the callback itself represents navigation and
+    // must still pass through the Senin.me top-level boundary checks below.
+    if (
+      Platform.OS === 'ios' &&
+      request.mainDocumentURL &&
+      request.url !== request.mainDocumentURL
+    ) {
+      return true;
+    }
+
+    const siteUrl = APP_CONFIG.defaultSiteUrl.replace(/\/+$/, '');
+    const authRequest =
+      request.url.startsWith(`${siteUrl}/session/sso`) ||
+      request.url.startsWith(`${siteUrl}/auth/`);
+
+    // On iOS, intercept third-party auth requests and handle them using
+    // ASWebAuthenticationSession.
+    if (Platform.OS === 'ios' && authRequest) {
+      if (!this.state.authProcessActive) {
+        this.requestAuth();
+      }
+      return false;
+    }
+
+    if (isSeninMeUrl(request.url)) {
+      return true;
+    }
+
+    if (!APP_CONFIG.singleSite && this.siteManager.urlInSites(request.url)) {
+      return true;
+    }
+
+    if (request.url.startsWith(`${APP_CONFIG.customScheme}://`)) {
+      this.props.screenProps._handleOpenUrl({ url: request.url });
+      return false;
+    }
+
+    if (
+      request.url.startsWith('discourse://') ||
+      request.url === 'about:blank'
+    ) {
+      return false;
+    }
+
+    this._openExternalUrl(request.url);
+    return false;
+  }
+
   render() {
     const theme = this.context;
 
     return (
       <View
+        testID="seninme-webview"
         onLayout={e => this._onLayout(e)}
         style={{
           flex: 1,
@@ -184,7 +283,11 @@ class WebViewComponent extends React.Component {
         )}
         {this.state.layoutCalculated && (
           <WebView
-            originWhitelist={['http://*', 'https://*', 'about:srcdoc']}
+            originWhitelist={[
+              'https://*',
+              `${APP_CONFIG.customScheme}://*`,
+              'about:srcdoc',
+            ]}
             style={{
               marginTop: -1, // hacky fix to a 1px overflow just above header
               backgroundColor: this.state.headerBg,
@@ -201,9 +304,9 @@ class WebViewComponent extends React.Component {
             allowsFullscreenVideo={true}
             allowsLinkPreview={true}
             hideKeyboardAccessoryView={!Platform.isPad}
-            webviewDebuggingEnabled={true}
+            webviewDebuggingEnabled={__DEV__}
             onLoadEnd={() => {
-              this.webview.requestFocus();
+              this.webview?.requestFocus();
             }}
             onScroll={syntheticEvent => {
               const { contentOffset, layoutMeasurement } =
@@ -254,58 +357,13 @@ class WebViewComponent extends React.Component {
                 onClose={() => this._onClose()}
               />
             )}
-            onShouldStartLoadWithRequest={request => {
-              // console.log('onShouldStartLoadWithRequest', request);
-
-              // onShouldStartLoadWithRequest is sometimes triggered by ajax requests (ads, etc.)
-              // this is a workaround to avoid launching Safari for these events
-              if (request.url !== request.mainDocumentURL) {
-                return true;
-              }
-
-              // on iOS, intercept 3rd party auth requests and handle them using ASWebAuthenticationSession
-              const authRequest =
-                request.url.startsWith(`${this.props.url}/session/sso`) ||
-                request.url.startsWith(`${this.props.url}/auth/`);
-              if (Platform.OS === 'ios' && authRequest) {
-                if (!this.state.authProcessActive) {
-                  this.requestAuth();
-                }
-                return false;
-              }
-
-              if (request.url.startsWith(this.props.url)) {
-                return true;
-              }
-
-              if (
-                request.url.startsWith('discourse://') ||
-                request.url === 'about:blank'
-              ) {
-                return false;
-              }
-              if (!this.siteManager.urlInSites(request.url)) {
-                // launch externally and stop loading request if external link
-                // ensure URL can be opened, before opening an external URL
-                Linking.canOpenURL(request.url)
-                  .then(() => {
-                    const useSVC = Settings.get('external_links_svc');
-                    if (useSVC) {
-                      if (!this.safariViewVisible) {
-                        SafariView.show({ url: request.url });
-                      }
-                    } else {
-                      Linking.openURL(request.url);
-                    }
-                  })
-                  .catch(e => {
-                    console.log('Linking.canOpenURL failed with ' + e);
-                  });
-                return false;
-              }
-              return true;
-            }}
+            onShouldStartLoadWithRequest={request =>
+              this._shouldStartLoad(request)
+            }
             onNavigationStateChange={navState => {
+              if (navState.canGoBack !== this.state.canGoBack) {
+                this.setState({ canGoBack: navState.canGoBack });
+              }
               this._storeLastPath(navState);
             }}
             decelerationRate={'normal'}
@@ -385,6 +443,7 @@ class WebViewComponent extends React.Component {
     this.siteManager.refreshSites();
     this.siteManager.clearActiveSite();
     this.appStateSubscription?.remove();
+    this.backHandlerSubscription?.remove();
   }
 
   _sendAppStateChange(appState) {
@@ -393,7 +452,7 @@ class WebViewComponent extends React.Component {
       true;
     `;
 
-    this.webview.injectJavaScript(appStateChange);
+    this.webview?.injectJavaScript(appStateChange);
   }
 
   _storeLastPath(navState) {
@@ -403,7 +462,7 @@ class WebViewComponent extends React.Component {
   }
 
   _onRefresh() {
-    this.webview.reload();
+    this.webview?.reload();
   }
 
   _onClose() {
@@ -427,7 +486,18 @@ class WebViewComponent extends React.Component {
   }
 
   async requestAuth() {
-    const site = this.siteManager.activeSite;
+    let site = this.siteManager.activeSite;
+
+    if (!site && APP_CONFIG.singleSite) {
+      site = this.siteManager
+        .listSites()
+        .find(candidate => isSeninMeUrl(candidate.url));
+
+      if (site) {
+        await this.siteManager.setActiveSite(site);
+      }
+    }
+
     if (!site) {
       Alert.alert(
         i18n.t('add_site_home_screen'),
@@ -456,7 +526,14 @@ class WebViewComponent extends React.Component {
   }
 
   _onMessage(event) {
-    let data = JSON.parse(event.nativeEvent.data);
+    let data;
+
+    try {
+      data = JSON.parse(event.nativeEvent.data);
+    } catch (error) {
+      console.log('Ignoring malformed WebView message', error);
+      return;
+    }
 
     let { headerBg, shareUrl, dismiss, markRead, showLogin } = data;
 
@@ -474,6 +551,7 @@ class WebViewComponent extends React.Component {
 
     if (shareUrl) {
       Share.share({
+        message: shareUrl,
         url: shareUrl,
       });
     }

@@ -21,6 +21,13 @@ describe('Senin.me white-label configuration', () => {
     expect(APP_CONFIG.pushBaseUrl).toBeNull();
   });
 
+  test('never falls back to the upstream Discourse push relay', () => {
+    const siteManager = read('js/site_manager.js');
+
+    expect(siteManager).not.toContain('https://api.discourse.org');
+    expect(siteManager).toContain('if (pushBaseUrl)');
+  });
+
   test('fails closed for malformed or replayed auth callbacks', () => {
     const bootstrap = read('js/seninme_bootstrap.js');
 

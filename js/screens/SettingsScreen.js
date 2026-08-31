@@ -20,15 +20,29 @@ import i18n from 'i18n-js';
 
 const SettingsScreen = props => {
   const theme = React.useContext(ThemeContext);
-  const site = props.screenProps.siteManager.listSites()[0];
+  const siteManager = props.screenProps.siteManager;
+  const site = siteManager.listSites()[0];
   const username = site?.username;
   const authenticated = Boolean(site?.authToken && username);
   const isDark = theme.background !== '#FFFFFF';
 
-  const openPath = path => {
-    if (site) {
-      props.screenProps.openUrl(`${site.url}${path}`);
+  const openPath = async path => {
+    if (!site) {
+      return;
     }
+
+    if (site.authToken && Platform.OS === 'ios') {
+      const params = await siteManager.generateURLParams(site);
+      props.screenProps.openUrl(`${site.url}${path}?${params}`);
+      return;
+    }
+
+    if (site.authToken && Platform.OS === 'android') {
+      props.screenProps.openUrl(`${site.url}${path}?discourse_app=1`);
+      return;
+    }
+
+    props.screenProps.openUrl(`${site.url}${path}`);
   };
 
   const toggleDarkMode = () => {

@@ -10,13 +10,23 @@ import {
   isSeninMeUrl,
   isUserApiAuthUrl,
   parseSeninMeUrl,
-  toLegacyDiscourseUrl,
 } from './seninme_links';
 
 installPushPolicy(Discourse);
 
 const originalHandleOpenUrl = Discourse.prototype._handleOpenUrl;
 const originalOpenUrl = Discourse.prototype.openUrl;
+const AUTH_REDIRECT_PARAMS = ['payload', 'otp', 'oneTimePassword'];
+
+const buildLegacyAuthRedirectUrl = params => {
+  const query = AUTH_REDIRECT_PARAMS.filter(
+    key => typeof params[key] === 'string' && params[key].length > 0,
+  )
+    .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+    .join('&');
+
+  return `discourse://auth_redirect${query ? `?${query}` : ''}`;
+};
 
 const openExternalUrl = url =>
   Linking.openURL(url).catch(error => {
@@ -36,7 +46,10 @@ Discourse.prototype._handleOpenUrl = function (event) {
     if (deepLink.route === 'auth_redirect') {
       return originalHandleOpenUrl.call(this, {
         ...event,
-        url: toLegacyDiscourseUrl(url),
+        // Never pass the raw custom-scheme query to the legacy parser. The
+        // Senin.me parser already decoded valid values and ignored malformed
+        // percent-encoding, so rebuild a small allowlisted query instead.
+        url: buildLegacyAuthRedirectUrl(deepLink.params),
       });
     }
 

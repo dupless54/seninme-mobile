@@ -26,11 +26,16 @@ describe('Senin.me single-site recovery', () => {
     expect(home).not.toContain('if (e && e.event)');
   });
 
-  test('can re-discover the configured community', () => {
+  test('can re-discover only the configured community', () => {
     const bootstrap = read('js/seninme_bootstrap.js');
 
     expect(bootstrap).toContain('retryConfiguredSite');
     expect(bootstrap).toContain('Site.fromTerm(APP_CONFIG.defaultSiteUrl)');
+    expect(bootstrap).toContain('const isConfiguredSite = site =>');
+    expect(
+      bootstrap.match(/if \(!isConfiguredSite\(configuredSite\)\)/g),
+    ).toHaveLength(2);
+    expect(bootstrap).toContain('Ignoring redirected non-Senin.me site');
   });
 
   test('has localized recovery labels', () => {

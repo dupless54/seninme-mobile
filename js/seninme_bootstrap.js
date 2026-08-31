@@ -1,13 +1,71 @@
 /* @flow */
 'use strict';
 
-import { Platform } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Site from './site';
 import SiteManager from './site_manager';
 import APP_CONFIG from './app_config';
 
 const normalizeUrl = url => (url || '').replace(/\/+$/, '');
+const configuredSiteUrl = normalizeUrl(APP_CONFIG.defaultSiteUrl);
+const isConfiguredSite = site =>
+  Boolean(site) && normalizeUrl(site.url) === configuredSiteUrl;
+
+SiteManager.prototype.handleAuthPayload = function (payload) {
+  let decrypted;
+
+  try {
+    const decryptedPayload = this.decryptHelper(payload);
+    if (!decryptedPayload) {
+      throw new Error('Unable to decrypt auth payload');
+    }
+    decrypted = JSON.parse(decryptedPayload);
+  } catch (error) {
+    console.log('Ignoring malformed Senin.me auth payload', error);
+    return false;
+  }
+
+  if (
+    !decrypted ||
+    typeof decrypted !== 'object' ||
+    typeof decrypted.nonce !== 'string' ||
+    typeof decrypted.key !== 'string' ||
+    decrypted.key.length === 0 ||
+    !this._nonceSite
+  ) {
+    console.log('Ignoring invalid Senin.me auth payload');
+    return false;
+  }
+
+  if (decrypted.nonce !== this._nonce) {
+    Alert.alert('We were not expecting this reply, please try again!');
+    return false;
+  }
+
+  const nonceSite = this._nonceSite;
+  nonceSite.authToken = decrypted.key;
+  nonceSite.hasPush = decrypted.push;
+  nonceSite.apiVersion = decrypted.api;
+
+  // Consume the nonce before any asynchronous work starts so the same
+  // encrypted callback cannot be replayed successfully.
+  this._nonce = null;
+  this._nonceSite = null;
+
+  this._onChange();
+
+  nonceSite
+    .refresh()
+    .then(() => {
+      this._onChange();
+    })
+    .catch(e => {
+      console.log('Failed to refresh ' + nonceSite.url + ' ' + e);
+    });
+
+  return true;
+};
 
 SiteManager.prototype.load = function () {
   this._loading = true;
@@ -34,16 +92,18 @@ SiteManager.prototype.load = function () {
         return;
       }
 
-      const configuredUrl = normalizeUrl(APP_CONFIG.defaultSiteUrl);
-      let configuredSite = storedSites.find(
-        site => normalizeUrl(site.url) === configuredUrl,
-      );
+      let configuredSite = storedSites.find(site => isConfiguredSite(site));
 
       if (!configuredSite) {
         configuredSite = await Site.fromTerm(APP_CONFIG.defaultSiteUrl);
       }
 
-      if (!configuredSite) {
+      if (!isConfiguredSite(configuredSite)) {
+        if (configuredSite) {
+          console.log(
+            `Ignoring redirected non-Senin.me site ${configuredSite.url}`,
+          );
+        }
         this.sites = [];
         return;
       }
@@ -88,7 +148,12 @@ SiteManager.prototype.retryConfiguredSite = async function () {
   try {
     const configuredSite = await Site.fromTerm(APP_CONFIG.defaultSiteUrl);
 
-    if (!configuredSite) {
+    if (!isConfiguredSite(configuredSite)) {
+      if (configuredSite) {
+        console.log(
+          `Ignoring redirected non-Senin.me site ${configuredSite.url}`,
+        );
+      }
       this.sites = [];
       return false;
     }
@@ -125,7 +190,7 @@ SiteManager.prototype.add = function (site) {
     return;
   }
 
-  if (normalizeUrl(site.url) !== normalizeUrl(APP_CONFIG.defaultSiteUrl)) {
+  if (!isConfiguredSite(site)) {
     console.log(`Ignoring non-Senin.me site ${site.url}`);
     return;
   }

@@ -1,0 +1,84 @@
+'use strict';
+
+import {
+  buildSharedTopicUrl,
+  isSeninMeUrl,
+  isUserApiAuthUrl,
+  parseSeninMeUrl,
+  toLegacyDiscourseUrl,
+} from '../seninme_links';
+
+describe('Senin.me deep links', () => {
+  test('only treats the configured Senin.me origin as internal', () => {
+    const siteUrl = 'https://senin.me';
+
+    expect(isSeninMeUrl(siteUrl)).toBe(true);
+    expect(isSeninMeUrl(`${siteUrl}/t/example/1`)).toBe(true);
+    expect(isSeninMeUrl(`${siteUrl}.evil.example/t/1`)).toBe(false);
+    expect(isSeninMeUrl('https://senin.me@evil.example/t/1')).toBe(false);
+    expect(isSeninMeUrl('http://senin.me/t/example/1')).toBe(false);
+    expect(isSeninMeUrl('https://example.com/https://senin.me')).toBe(false);
+  });
+
+  test('keeps User API Key authorization on the external auth path', () => {
+    const authUrl = 'https://senin.me/user-api-key/new';
+
+    expect(isUserApiAuthUrl(authUrl)).toBe(true);
+    expect(isUserApiAuthUrl(`${authUrl}?client_id=abc`)).toBe(true);
+    expect(isUserApiAuthUrl(`${authUrl}/extra`)).toBe(false);
+    expect(isUserApiAuthUrl('https://senin.me/latest')).toBe(false);
+  });
+
+  test('parses supported custom scheme parameters safely', () => {
+    const deepLink =
+      'seninme://open?url=https%3A%2F%2Fsenin.me%2Ft%2Fexample%2F1';
+
+    expect(parseSeninMeUrl(deepLink)).toEqual({
+      route: 'open',
+      params: { url: 'https://senin.me/t/example/1' },
+    });
+  });
+
+  test('does not treat non-Senin.me schemes as app deep links', () => {
+    expect(parseSeninMeUrl('https://senin.me/latest')).toBeNull();
+    expect(parseSeninMeUrl('discourse://auth_redirect?payload=x')).toBeNull();
+  });
+
+  test('keeps unknown routes explicit so the runtime can ignore them', () => {
+    const deepLink = parseSeninMeUrl('seninme://admin?next=%2Flatest');
+
+    expect(deepLink).toEqual({
+      route: 'admin',
+      params: { next: '/latest' },
+    });
+  });
+
+  test('ignores malformed encoded parameters without falling through', () => {
+    const deepLink =
+      'seninme://open?url=%E0%A4%A&safe=https%3A%2F%2Fsenin.me%2Flatest';
+
+    expect(parseSeninMeUrl(deepLink)).toEqual({
+      route: 'open',
+      params: { safe: 'https://senin.me/latest' },
+    });
+  });
+
+  test('turns shared content into a Senin.me composer URL', () => {
+    const sharedUrl = 'https://example.com/a?b=1&c=2';
+    const expectedUrl =
+      'https://senin.me/new-topic?body=https%3A%2F%2Fexample.com%2Fa%3Fb%3D1%26c%3D2';
+
+    expect(buildSharedTopicUrl(sharedUrl)).toBe(expectedUrl);
+    expect(buildSharedTopicUrl('hello & merhaba')).toBe(
+      'https://senin.me/new-topic?body=hello%20%26%20merhaba',
+    );
+  });
+
+  test('converts only the Senin.me scheme prefix for legacy auth handling', () => {
+    const authRedirect = 'seninme://auth_redirect?payload=encrypted';
+
+    expect(toLegacyDiscourseUrl(authRedirect)).toBe(
+      'discourse://auth_redirect?payload=encrypted',
+    );
+  });
+});

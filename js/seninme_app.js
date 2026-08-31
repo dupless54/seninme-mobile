@@ -20,7 +20,8 @@ const buildLegacyAuthRedirectUrl = params => {
     key => typeof params[key] === 'string' && params[key].length > 0,
   )
     .map(
-      key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`,
+      key =>
+        `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`,
     )
     .join('&');
 

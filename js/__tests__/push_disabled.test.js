@@ -44,12 +44,17 @@ describe('Senin.me disabled push policy', () => {
     expect(iosInfoPlist).not.toContain('<string>remote-notification</string>');
   });
 
-  test('preserves Android permission batches that do not request notifications', () => {
-    expect(pushPolicy).toContain(
-      'if (!permissions.includes(notificationPermission))',
-    );
-    expect(pushPolicy).toContain('return originalRequestMultiple(permissions);');
-  });
+  test(
+    'preserves Android permission batches that do not request notifications',
+    () => {
+      expect(pushPolicy).toContain(
+        'if (!permissions.includes(notificationPermission))',
+      );
+      expect(pushPolicy).toContain(
+        'return originalRequestMultiple(permissions);',
+      );
+    },
+  );
 
   test('does not initialize Firebase Messaging while push is disabled', () => {
     expect(firebaseAdapter).not.toContain("from '@react-native-firebase/app'");

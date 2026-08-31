@@ -35,6 +35,10 @@ export const installPushPolicy = DiscourseClass => {
     };
 
     PermissionsAndroid.requestMultiple = permissions => {
+      if (!permissions.includes(notificationPermission)) {
+        return originalRequestMultiple(permissions);
+      }
+
       const allowedPermissions = permissions.filter(
         permission => permission !== notificationPermission,
       );

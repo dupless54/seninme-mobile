@@ -47,4 +47,20 @@ describe('Senin.me release identity', () => {
     expect(fastfile).toContain('SENINME_GOOGLE_PLAY_JSON_KEY');
     expect(fastfile).toContain('SENINME_ANDROID_KEYSTORE_PATH');
   });
+
+  test('fails early when release credential files are missing', () => {
+    expect(fastfile).toContain('def required_file_env!(name)');
+    expect(fastfile).toContain(
+      'File configured by #{name} does not exist: #{path}',
+    );
+    expect(fastfile).toContain(
+      'required_file_env!("SENINME_ASC_API_KEY_PATH")',
+    );
+    expect(fastfile).toContain(
+      'required_file_env!("SENINME_ANDROID_KEYSTORE_PATH")',
+    );
+    expect(fastfile).toContain(
+      'required_file_env!("SENINME_GOOGLE_PLAY_JSON_KEY")',
+    );
+  });
 });

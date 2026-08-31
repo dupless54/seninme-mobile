@@ -90,6 +90,25 @@ function verifyAndroid(statements, expectedFingerprint) {
   }
 }
 
+function enablesAllApplePaths(detail) {
+  const paths = detail?.paths;
+  if (Array.isArray(paths) && paths.some(path => path === '*' || path === '/*')) {
+    return true;
+  }
+
+  const components = detail?.components;
+  return (
+    Array.isArray(components) &&
+    components.some(component => {
+      const pathPattern = component?.['/'];
+      return (
+        component?.exclude !== true &&
+        (pathPattern === '*' || pathPattern === '/*')
+      );
+    })
+  );
+}
+
 function verifyApple(document, teamId) {
   const expectedAppId = `${teamId}.${IOS_BUNDLE_ID}`;
   const details = document?.applinks?.details;
@@ -100,14 +119,18 @@ function verifyApple(document, teamId) {
     );
   }
 
-  const appIds = details.flatMap(detail => [
-    detail?.appID,
-    ...(Array.isArray(detail?.appIDs) ? detail.appIDs : []),
-  ]);
+  const match = details.find(detail => {
+    const appIds = [
+      detail?.appID,
+      ...(Array.isArray(detail?.appIDs) ? detail.appIDs : []),
+    ];
 
-  if (!appIds.includes(expectedAppId)) {
+    return appIds.includes(expectedAppId) && enablesAllApplePaths(detail);
+  });
+
+  if (!match) {
     throw new Error(
-      `apple-app-site-association does not authorize ${expectedAppId}`,
+      `apple-app-site-association does not authorize ${expectedAppId} for all Senin.me paths`,
     );
   }
 }

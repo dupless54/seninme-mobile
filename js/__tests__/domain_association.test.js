@@ -30,6 +30,12 @@ describe('Senin.me verified domain association', () => {
     expect(verifier).toContain('SENINME_IOS_TEAM_ID');
   });
 
+  test('requires universal-link coverage for all Senin.me paths', () => {
+    expect(verifier).toContain('function enablesAllApplePaths(detail)');
+    expect(verifier).toContain('component?.exclude !== true');
+    expect(verifier).toContain('&& enablesAllApplePaths(detail)');
+  });
+
   test('exposes an explicit production verification command', () => {
     expect(packageJson).toContain('"verify:domain-association"');
     expect(packageJson).toContain('scripts/verify-domain-association.cjs');

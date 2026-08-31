@@ -1,13 +1,68 @@
 /* @flow */
 'use strict';
 
-import { Platform } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Site from './site';
 import SiteManager from './site_manager';
 import APP_CONFIG from './app_config';
 
 const normalizeUrl = url => (url || '').replace(/\/+$/, '');
+
+SiteManager.prototype.handleAuthPayload = function (payload) {
+  let decrypted;
+
+  try {
+    const decryptedPayload = this.decryptHelper(payload);
+    if (!decryptedPayload) {
+      throw new Error('Unable to decrypt auth payload');
+    }
+    decrypted = JSON.parse(decryptedPayload);
+  } catch (error) {
+    console.log('Ignoring malformed Senin.me auth payload', error);
+    return false;
+  }
+
+  if (
+    !decrypted ||
+    typeof decrypted !== 'object' ||
+    typeof decrypted.nonce !== 'string' ||
+    typeof decrypted.key !== 'string' ||
+    decrypted.key.length === 0 ||
+    !this._nonceSite
+  ) {
+    console.log('Ignoring invalid Senin.me auth payload');
+    return false;
+  }
+
+  if (decrypted.nonce !== this._nonce) {
+    Alert.alert('We were not expecting this reply, please try again!');
+    return false;
+  }
+
+  const nonceSite = this._nonceSite;
+  nonceSite.authToken = decrypted.key;
+  nonceSite.hasPush = decrypted.push;
+  nonceSite.apiVersion = decrypted.api;
+
+  // Consume the nonce before any asynchronous work starts so the same
+  // encrypted callback cannot be replayed successfully.
+  this._nonce = null;
+  this._nonceSite = null;
+
+  this._onChange();
+
+  nonceSite
+    .refresh()
+    .then(() => {
+      this._onChange();
+    })
+    .catch(e => {
+      console.log('Failed to refresh ' + nonceSite.url + ' ' + e);
+    });
+
+  return true;
+};
 
 SiteManager.prototype.load = function () {
   this._loading = true;

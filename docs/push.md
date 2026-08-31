@@ -15,9 +15,10 @@ While `APP_CONFIG.pushBaseUrl` is `null`:
 - The Google Services Gradle plugin is not configured or applied.
 - iOS does not surface the inherited notification permission prompt.
 - The inherited iOS background local-notification fallback is disabled.
+- The unused iOS `fetch` background mode is removed while no background-fetch task is registered.
 - Stale notification callbacks from previous installs are ignored by the Senin.me runtime policy.
 
-This keeps a development or first production build from asking users for a capability that Senin.me cannot yet deliver.
+This keeps a development or first production build from asking users for a capability that Senin.me cannot yet deliver or advertising an unused background capability to iOS.
 
 ## Enabling push later
 
@@ -32,7 +33,7 @@ Required pieces:
 5. Restore the Google Services Gradle plugin and provide the Senin.me `google-services.json` through the release environment.
 6. Restore only the Android notification permissions actually required by the chosen Firebase Messaging implementation.
 7. Configure Senin.me-owned APNs capabilities, certificates/keys, and provisioning for iOS.
-8. Replace the disabled iOS notification runtime policy with the final permission-request UX.
+8. Replace the disabled iOS notification runtime policy with the final permission-request UX and restore background capabilities only if the final implementation actually needs them.
 9. Update App Store and Google Play privacy disclosures in the same release if the enabled behavior changes collected data or tracking declarations.
 10. Run exact-head Linting, Jest, Android Build, and iOS tests before merge.
 

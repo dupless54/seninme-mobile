@@ -138,7 +138,7 @@ SiteManager.prototype.load = function () {
 };
 
 SiteManager.prototype.retryConfiguredSite = async function () {
-  if (!APP_CONFIG.singleSite) {
+  if (!APP_CONFIG.singleSite || this._loading) {
     return false;
   }
 

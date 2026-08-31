@@ -7,6 +7,10 @@ import path from 'path';
 const repoRoot = path.resolve(__dirname, '../..');
 const readText = relativePath =>
   fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
+const appIconDir = path.join(
+  repoRoot,
+  'ios/Discourse/Images.xcassets/AppIcon.appiconset',
+);
 
 const iosInfo = readText('ios/Discourse/Info.plist');
 const shareInfo = readText('ios/ShareExtension/Info.plist');
@@ -53,19 +57,22 @@ describe('Senin.me application branding', () => {
 
   test('ships Senin.me iOS app icons in every supported appearance', () => {
     const filenames = ['seninme.png', 'seninme_dark.png', 'seninme_tinted.png'];
+    const legacyFilenames = [
+      'discourse.png',
+      'discourse_dark.png',
+      'discourse_tinted.png',
+    ];
 
     expect(appIconContents).not.toContain('discourse');
+
+    legacyFilenames.forEach(filename => {
+      expect(fs.existsSync(path.join(appIconDir, filename))).toBe(false);
+    });
 
     filenames.forEach(filename => {
       expect(appIconContents).toContain(`"filename": "${filename}"`);
 
-      const icon = fs.readFileSync(
-        path.join(
-          repoRoot,
-          'ios/Discourse/Images.xcassets/AppIcon.appiconset',
-          filename,
-        ),
-      );
+      const icon = fs.readFileSync(path.join(appIconDir, filename));
       expect(icon.subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a');
       expect(icon.readUInt32BE(16)).toBe(1024);
       expect(icon.readUInt32BE(20)).toBe(1024);

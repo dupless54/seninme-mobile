@@ -1,8 +1,11 @@
-import { by, device, element, expect } from 'detox';
+import { by, device, element, expect, waitFor } from 'detox';
 import i18n from 'i18n-js';
 
+const HOME_TIMEOUT = 30000;
+const WEBVIEW_TIMEOUT = 30000;
+
 describe.each([['en'], ['fr']])(`Single-site shell (locale: %s)`, locale => {
-  beforeAll(async () => {
+  beforeAll(() => {
     i18n.translations = {
       en: require('../js/locale/en.json'),
       fr: require('../js/locale/fr.json'),
@@ -10,7 +13,12 @@ describe.each([['en'], ['fr']])(`Single-site shell (locale: %s)`, locale => {
 
     i18n.locale = locale;
     i18n.fallbacks = true;
+  });
 
+  beforeEach(async () => {
+    // A React Native reload can preserve the current native navigation stack.
+    // Launch a fresh process so every scenario deterministically starts on the
+    // Senin.me native Home screen while keeping normal persisted app data.
     await device.launchApp({
       newInstance: true,
       languageAndLocale: {
@@ -19,10 +27,10 @@ describe.each([['en'], ['fr']])(`Single-site shell (locale: %s)`, locale => {
       },
       permissions: { notifications: 'YES' },
     });
-  });
 
-  beforeEach(async () => {
-    await device.reloadReactNative();
+    await waitFor(element(by.id('seninme-home-brand')))
+      .toBeVisible()
+      .withTimeout(HOME_TIMEOUT);
   });
 
   it('should boot as the Senin.me single-site app', async () => {
@@ -39,7 +47,16 @@ describe.each([['en'], ['fr']])(`Single-site shell (locale: %s)`, locale => {
 
   it('should keep Senin.me content inside the native WebView', async () => {
     await element(by.id('seninme-home-latest')).tap();
-    await expect(element(by.id('seninme-webview'))).toBeVisible();
+
+    // The WebView screen root is intentionally a non-hittable wrapper around
+    // the native WebView. Detox can report that wrapper as not visible even
+    // while the child WebView fills the screen, so assert route mount plus the
+    // disappearance of the foreground Home surface instead.
+    await waitFor(element(by.id('seninme-webview')))
+      .toExist()
+      .withTimeout(WEBVIEW_TIMEOUT);
+    await expect(element(by.id('seninme-webview'))).toExist();
+    await expect(element(by.id('seninme-home-feed'))).not.toBeVisible();
   });
 
   it('should show Senin.me-only discovery actions', async () => {

@@ -11,6 +11,12 @@ def required_env!(name)
   value
 end
 
+def required_file_env!(name)
+  path = required_env!(name)
+  UI.user_error!("File configured by #{name} does not exist: #{path}") unless File.file?(path)
+  path
+end
+
 def match_readonly?
   ENV.fetch("SENINME_MATCH_READONLY", "true").downcase != "false"
 end
@@ -21,7 +27,7 @@ def match_options(type)
     readonly: match_readonly?,
     git_url: required_env!("SENINME_MATCH_GIT_URL"),
     git_branch: ENV.fetch("SENINME_MATCH_GIT_BRANCH", "main"),
-    api_key_path: required_env!("SENINME_ASC_API_KEY_PATH"),
+    api_key_path: required_file_env!("SENINME_ASC_API_KEY_PATH"),
     team_id: required_env!("SENINME_IOS_TEAM_ID"),
     app_identifier: [IOS_APP_IDENTIFIER, IOS_SHARE_EXTENSION_IDENTIFIER],
   }
@@ -30,7 +36,7 @@ end
 def android_signing_properties
   {
     "MYAPP_VERSION" => ANDROID_APP_VERSION,
-    "MYAPP_RELEASE_STORE_FILE" => required_env!("SENINME_ANDROID_KEYSTORE_PATH"),
+    "MYAPP_RELEASE_STORE_FILE" => required_file_env!("SENINME_ANDROID_KEYSTORE_PATH"),
     "MYAPP_RELEASE_KEY_ALIAS" => required_env!("SENINME_ANDROID_KEY_ALIAS"),
     "MYAPP_RELEASE_STORE_PASSWORD" => required_env!("SENINME_ANDROID_STORE_PASSWORD"),
     "MYAPP_RELEASE_KEY_PASSWORD" => required_env!("SENINME_ANDROID_KEY_PASSWORD"),
@@ -53,7 +59,7 @@ platform :ios do
   desc "Submit a Senin.me build to TestFlight"
   lane :release do
     team_id = required_env!("SENINME_IOS_TEAM_ID")
-    api_key_path = required_env!("SENINME_ASC_API_KEY_PATH")
+    api_key_path = required_file_env!("SENINME_ASC_API_KEY_PATH")
 
     increment_version_number_in_plist(
       xcodeproj: "./ios/#{PROJECT_NAME}.xcodeproj",
@@ -142,7 +148,7 @@ platform :android do
     upload_to_play_store(
       package_name: ANDROID_PACKAGE_NAME,
       track: ENV.fetch("SENINME_PLAY_TRACK", "internal"),
-      json_key: required_env!("SENINME_GOOGLE_PLAY_JSON_KEY"),
+      json_key: required_file_env!("SENINME_GOOGLE_PLAY_JSON_KEY"),
       skip_upload_apk: true
     )
   end

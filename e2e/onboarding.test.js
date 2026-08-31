@@ -26,7 +26,7 @@ describe.each([['en'], ['fr']])(`Single-site shell (locale: %s)`, locale => {
   });
 
   it('should boot as the Senin.me single-site app', async () => {
-    await expect(element(by.text('Senin.me'))).toBeVisible();
+    await expect(element(by.id('seninme-home-brand'))).toBeVisible();
     await expect(element(by.id('nav-plus-icon'))).not.toExist();
     await expect(element(by.text(i18n.t('home')))).toBeVisible();
   });

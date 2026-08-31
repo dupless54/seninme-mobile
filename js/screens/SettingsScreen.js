@@ -21,6 +21,15 @@ import i18n from 'i18n-js';
 const SettingsScreen = props => {
   const theme = React.useContext(ThemeContext);
   const siteManager = props.screenProps.siteManager;
+  const [, setSiteRevision] = React.useState(0);
+
+  React.useEffect(() => {
+    const handleSiteChange = () => setSiteRevision(revision => revision + 1);
+    siteManager.subscribe(handleSiteChange);
+
+    return () => siteManager.unsubscribe(handleSiteChange);
+  }, [siteManager]);
+
   const site = siteManager.listSites()[0];
   const username = site?.username;
   const authenticated = Boolean(site?.authToken && username);

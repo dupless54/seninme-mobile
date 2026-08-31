@@ -43,10 +43,14 @@ describe.each([['en'], ['fr']])(`Single-site shell (locale: %s)`, locale => {
     await expect(element(by.id('seninme-discover-search'))).toBeVisible();
   });
 
-  it('should show the Notifications screen', async () => {
+  it('should show the signed-out Senin.me Notifications state', async () => {
     await element(by.text(i18n.t('notifications'))).tap();
-    await expect(element(by.id('seninme-notifications-header'))).toBeVisible();
-    await element(by.text(i18n.t('home'))).tap();
+    await expect(element(by.id('seninme-notifications-screen'))).toBeVisible();
+    await expect(element(by.id('seninme-notifications-connect'))).toBeVisible();
+    await expect(
+      element(by.id('seninme-notifications-connect-action')),
+    ).toBeVisible();
+    await element(by.id('seninme-notifications-connect-action')).tap();
     await expect(element(by.id('seninme-home-feed'))).toBeVisible();
   });
 

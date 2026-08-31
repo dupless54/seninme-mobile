@@ -32,10 +32,12 @@ class NotificationRow extends React.Component {
         <View style={styles.container}>
           {this._iconForNotification(this.props.notification)}
           {this._textForNotification(this.props.notification)}
-          <Image
-            style={styles.siteIcon}
-            source={{ uri: this.props.site.icon }}
-          />
+          {!this.props.singleSite ? (
+            <Image
+              style={styles.siteIcon}
+              source={{ uri: this.props.site.icon }}
+            />
+          ) : null}
         </View>
       </TouchableHighlight>
     );
@@ -45,13 +47,14 @@ class NotificationRow extends React.Component {
     let name = DiscourseUtils.iconNameForNotification(notification);
 
     return (
-      <FontAwesome5
-        style={styles.notificationIcon}
-        name={name}
-        size={14}
-        color="#919191"
-        iconStyle="solid"
-      />
+      <View style={styles.notificationIconContainer}>
+        <FontAwesome5
+          name={name}
+          size={14}
+          color={this.context.blueCallToAction}
+          iconStyle="solid"
+        />
+      </View>
     );
   }
 
@@ -295,11 +298,13 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignSelf: 'center',
     fontSize: 15,
+    lineHeight: 21,
   },
   container: {
     flex: 1,
     flexDirection: 'row',
-    margin: 12,
+    marginHorizontal: 14,
+    marginVertical: 11,
   },
   siteIcon: {
     width: 32,
@@ -308,10 +313,15 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     borderRadius: 12,
   },
-  notificationIcon: {
+  notificationIconContainer: {
+    alignItems: 'center',
     alignSelf: 'center',
+    borderRadius: 16,
+    height: 32,
+    justifyContent: 'center',
+    marginLeft: 2,
     marginRight: 12,
-    marginLeft: 6,
+    width: 32,
   },
 });
 

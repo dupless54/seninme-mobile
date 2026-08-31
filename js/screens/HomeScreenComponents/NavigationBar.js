@@ -16,26 +16,21 @@ import APP_CONFIG from '../../app_config';
 const NavigationBar = props => {
   const theme = useContext(ThemeContext);
 
-  const renderCogButton = () => {
-    if (Platform.OS !== 'android') {
-      return;
-    }
-
-    return (
-      <TouchableHighlight
-        style={{ ...styles.androidSettingsButton }}
-        underlayColor={'transparent'}
-        onPress={props.onDidPressAndroidSettingsIcon}
-      >
-        <FontAwesome5
-          name={'cog'}
-          size={20}
-          style={{ color: theme.grayUI }}
-          iconStyle="solid"
-        />
-      </TouchableHighlight>
-    );
-  };
+  const renderSettingsButton = () => (
+    <TouchableHighlight
+      testID="nav-settings-icon"
+      style={styles.settingsButton}
+      underlayColor={'transparent'}
+      onPress={props.onDidPressAndroidSettingsIcon}
+    >
+      <FontAwesome5
+        name={'cog'}
+        size={20}
+        style={{ color: theme.grayUI }}
+        iconStyle="solid"
+      />
+    </TouchableHighlight>
+  );
 
   const renderPlusButton = () => {
     if (APP_CONFIG.singleSite) {
@@ -44,7 +39,7 @@ const NavigationBar = props => {
 
     return (
       <TouchableHighlight
-        style={{ ...styles.plusButton }}
+        style={styles.plusButton}
         underlayColor={'transparent'}
         testID="nav-plus-icon"
         onPress={props.onDidPressPlusIcon}
@@ -72,7 +67,7 @@ const NavigationBar = props => {
           </Text>
         </TouchableHighlight>
       </View>
-      {renderCogButton()}
+      {renderSettingsButton()}
       {renderPlusButton()}
       <View
         style={[styles.separator, { backgroundColor: theme.grayBackground }]}
@@ -104,7 +99,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 0,
   },
-  androidSettingsButton: {
+  settingsButton: {
     position: 'absolute',
     right: 6,
     top: 6,

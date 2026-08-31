@@ -129,5 +129,21 @@
   "home_chat": "Sohbet",
   "home_trending": "Şu an gündemde",
   "home_trending_description": "Toplulukta şu anda en çok ilgi gören konular.",
-  "home_see_all": "Tümünü gör"
+  "home_see_all": "Tümünü gör",
+  "settings_description": "Senin.me hesabını ve topluluk tercihlerini buradan yönet.",
+  "settings_account_section": "Hesap",
+  "settings_profile": "Profil",
+  "settings_account": "Hesap ayarları",
+  "settings_account_description": "Hesap bilgilerini ve güvenlik ayarlarını yönet.",
+  "settings_notification_preferences": "Bildirim tercihleri",
+  "settings_notification_description": "Hangi Senin.me bildirimlerini alacağını seç.",
+  "settings_connect_title": "Senin.me hesabını bağla",
+  "settings_connect_description": "Profil, hesap ayarları ve kişiselleştirilmiş bildirimler için Ana Sayfa üzerinden giriş yap.",
+  "settings_connect_action": "Ana Sayfaya git",
+  "settings_community_section": "Topluluk",
+  "settings_privacy": "Gizlilik",
+  "settings_terms": "Kullanım Koşulları",
+  "settings_about": "Senin.me hakkında",
+  "settings_appearance_section": "Görünüm",
+  "settings_version": "Senin.me %{version} (%{build})"
 }

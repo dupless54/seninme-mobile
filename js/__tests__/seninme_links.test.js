@@ -13,6 +13,8 @@ describe('Senin.me deep links', () => {
     expect(isSeninMeUrl('https://senin.me')).toBe(true);
     expect(isSeninMeUrl('https://senin.me/t/example/1')).toBe(true);
     expect(isSeninMeUrl('https://senin.me.evil.example/t/1')).toBe(false);
+    expect(isSeninMeUrl('https://senin.me@evil.example/t/1')).toBe(false);
+    expect(isSeninMeUrl('http://senin.me/t/example/1')).toBe(false);
     expect(isSeninMeUrl('https://example.com/https://senin.me')).toBe(false);
   });
 
@@ -21,6 +23,9 @@ describe('Senin.me deep links', () => {
     expect(
       isUserApiAuthUrl('https://senin.me/user-api-key/new?client_id=abc'),
     ).toBe(true);
+    expect(
+      isUserApiAuthUrl('https://senin.me/user-api-key/new/extra'),
+    ).toBe(false);
     expect(isUserApiAuthUrl('https://senin.me/latest')).toBe(false);
   });
 
@@ -35,9 +40,35 @@ describe('Senin.me deep links', () => {
     });
   });
 
+  test('does not treat non-Senin.me schemes as app deep links', () => {
+    expect(parseSeninMeUrl('https://senin.me/latest')).toBeNull();
+    expect(parseSeninMeUrl('discourse://auth_redirect?payload=x')).toBeNull();
+  });
+
+  test('keeps unknown routes explicit so the runtime can ignore them', () => {
+    expect(parseSeninMeUrl('seninme://admin?next=%2Flatest')).toEqual({
+      route: 'admin',
+      params: { next: '/latest' },
+    });
+  });
+
+  test('ignores malformed encoded parameters without falling through', () => {
+    expect(
+      parseSeninMeUrl(
+        'seninme://open?url=%E0%A4%A&safe=https%3A%2F%2Fsenin.me%2Flatest',
+      ),
+    ).toEqual({
+      route: 'open',
+      params: { safe: 'https://senin.me/latest' },
+    });
+  });
+
   test('turns shared content into a Senin.me composer URL', () => {
     expect(buildSharedTopicUrl('https://example.com/a?b=1&c=2')).toBe(
       'https://senin.me/new-topic?body=https%3A%2F%2Fexample.com%2Fa%3Fb%3D1%26c%3D2',
+    );
+    expect(buildSharedTopicUrl('hello & merhaba')).toBe(
+      'https://senin.me/new-topic?body=hello%20%26%20merhaba',
     );
   });
 

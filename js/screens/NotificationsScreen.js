@@ -21,6 +21,7 @@ class NotificationsScreen extends React.Component {
     super(props);
 
     this._siteManager = this.props.screenProps.siteManager;
+    this._fetchGeneration = 0;
 
     this.state = {
       progress: 0,
@@ -47,7 +48,15 @@ class NotificationsScreen extends React.Component {
       return;
     }
 
+    const fetchGeneration = this._fetchGeneration;
     this._siteManager.getSeenNotificationMap().then(map => {
+      if (
+        fetchGeneration !== this._fetchGeneration ||
+        this._siteManager.connectedSitesCount() === 0
+      ) {
+        return;
+      }
+
       this._seenNotificationMap = map;
       this.props.screenProps.setSeenNotificationMap(map);
       this.refresh();
@@ -86,6 +95,14 @@ class NotificationsScreen extends React.Component {
       return;
     }
 
+    // Authentication changes invalidate any request started for the previous
+    // session. Reset the in-flight marker so a newly connected account can
+    // immediately fetch its own notifications without waiting for a stale
+    // request to settle.
+    this._fetchGeneration += 1;
+    this._fetching = false;
+    this._fetchPromise = null;
+
     this.setState({ connectedSites }, () => {
       if (connectedSites === 0) {
         this._notification = null;
@@ -105,7 +122,15 @@ class NotificationsScreen extends React.Component {
       }
 
       if (previouslyConnected === 0) {
+        const fetchGeneration = this._fetchGeneration;
         this._siteManager.getSeenNotificationMap().then(map => {
+          if (
+            fetchGeneration !== this._fetchGeneration ||
+            this._siteManager.connectedSitesCount() === 0
+          ) {
+            return;
+          }
+
           this._seenNotificationMap = map;
           this.props.screenProps.setSeenNotificationMap(map);
           this.refresh();
@@ -134,6 +159,7 @@ class NotificationsScreen extends React.Component {
 
   componentWillUnmount() {
     this._mounted = false;
+    this._fetchGeneration += 1;
     this._siteManager.unsubscribe(this._onSiteManagerChange);
   }
 
@@ -321,11 +347,17 @@ class NotificationsScreen extends React.Component {
     if (this._fetching) {
       return this._fetchPromise || Promise.resolve();
     }
+
+    const fetchGeneration = this._fetchGeneration;
     this._fetching = true;
 
     if (this._mounted) {
       setTimeout(() => {
-        if (this._mounted && this._fetching) {
+        if (
+          this._mounted &&
+          this._fetching &&
+          fetchGeneration === this._fetchGeneration
+        ) {
           this.setState({
             progress: Math.random() * 0.4,
           });
@@ -333,9 +365,13 @@ class NotificationsScreen extends React.Component {
       }, 100);
     }
 
-    this._fetchPromise = this._siteManager
+    const fetchPromise = this._siteManager
       .notifications(notificationTypes, options)
       .then(notifications => {
+        if (fetchGeneration !== this._fetchGeneration) {
+          return;
+        }
+
         this._refreshed = true;
 
         if (this._siteManager.connectedSitesCount() === 0) {
@@ -358,7 +394,7 @@ class NotificationsScreen extends React.Component {
             this.removePlaceholder();
 
             setTimeout(() => {
-              if (this._mounted) {
+              if (this._mounted && fetchGeneration === this._fetchGeneration) {
                 this.setState({ progress: 0 });
               }
             }, 400);
@@ -372,6 +408,10 @@ class NotificationsScreen extends React.Component {
         }
       })
       .catch(error => {
+        if (fetchGeneration !== this._fetchGeneration) {
+          return;
+        }
+
         this._refreshed = true;
         console.log('Failed to refresh notifications', error);
         if (this._mounted) {
@@ -380,11 +420,17 @@ class NotificationsScreen extends React.Component {
         }
       })
       .finally(() => {
-        this._fetching = false;
-        this._fetchPromise = null;
+        if (
+          fetchGeneration === this._fetchGeneration &&
+          this._fetchPromise === fetchPromise
+        ) {
+          this._fetching = false;
+          this._fetchPromise = null;
+        }
       });
 
-    return this._fetchPromise;
+    this._fetchPromise = fetchPromise;
+    return fetchPromise;
   }
 }
 

@@ -54,6 +54,8 @@ Its `applinks.details` section must authorize the application identifier formed 
 
 `APPLE_TEAM_ID.me.senin.mobile`
 
+Senin.me intends forum HTTPS URLs across the site to open in the app, so the matching detail must also authorize all paths. The verifier accepts the legacy `paths` form with `"*"` or `"/*"`, or the modern `components` form with an equivalent non-excluded `/` rule.
+
 Example shape:
 
 ```json
@@ -86,7 +88,7 @@ The verifier fetches both production association endpoints and fails unless:
 
 1. both endpoints return HTTP 200 directly;
 2. `assetlinks.json` authorizes `me.senin.mobile` for `handle_all_urls` with the configured release fingerprint;
-3. the Apple association document authorizes `TEAM_ID.me.senin.mobile`.
+3. the Apple association document authorizes `TEAM_ID.me.senin.mobile` and actually enables all Senin.me paths for that application.
 
 Run this check whenever the Android signing certificate, Apple Developer team, domain routing, CDN, reverse proxy, or association documents change.
 

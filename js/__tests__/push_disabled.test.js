@@ -26,7 +26,12 @@ describe('Senin.me disabled push policy', () => {
 
   test('blocks inherited notification permission prompts and background alerts', () => {
     expect(pushPolicy).toContain(
-      'permission === PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS',
+      'PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS',
+    );
+    expect(pushPolicy).toContain('PermissionsAndroid.request =');
+    expect(pushPolicy).toContain('PermissionsAndroid.requestMultiple =');
+    expect(pushPolicy).toContain(
+      '[notificationPermission]: PermissionsAndroid.RESULTS.DENIED',
     );
     expect(pushPolicy).toContain('PushNotificationIOS.requestPermissions');
     expect(pushPolicy).toContain(

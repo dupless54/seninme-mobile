@@ -6,6 +6,7 @@ const DOMAIN = 'senin.me';
 const ANDROID_PACKAGE = 'me.senin.mobile';
 const IOS_BUNDLE_ID = 'me.senin.mobile';
 const HANDLE_ALL_URLS = 'delegate_permission/common.handle_all_urls';
+const JSON_CONTENT_TYPE = /^application\/json\b/i;
 
 function requireEnvironment(name) {
   const value = process.env[name]?.trim();
@@ -62,6 +63,16 @@ function fetchJson(path) {
             reject(
               new Error(
                 `${url} returned HTTP ${response.statusCode}; association endpoints must be served directly with HTTP 200`,
+              ),
+            );
+            return;
+          }
+
+          const contentType = response.headers['content-type'] || '';
+          if (!JSON_CONTENT_TYPE.test(contentType)) {
+            reject(
+              new Error(
+                `${url} returned Content-Type ${contentType || '(missing)'}; association JSON must be served as application/json`,
               ),
             );
             return;

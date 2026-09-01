@@ -11,6 +11,7 @@ const readText = relativePath =>
 const androidManifest = readText('android/app/src/main/AndroidManifest.xml');
 const iosEntitlements = readText('ios/Discourse/Discourse.entitlements');
 const iosSigningGuide = readText('docs/ios-signing.md');
+const setupGuide = readText('docs/SENINME_SETUP.md');
 const verifier = readText('scripts/verify-domain-association.cjs');
 const packageJson = readText('package.json');
 
@@ -57,6 +58,11 @@ describe('Senin.me verified domain association', () => {
     expect(iosSigningGuide).toContain('App Identifier Prefix');
     expect(iosSigningGuide).toContain(
       'Do not substitute the Team ID for the App Identifier Prefix',
+    );
+    expect(setupGuide).toContain('APP_IDENTIFIER_PREFIX.me.senin.mobile');
+    expect(setupGuide).toContain('SENINME_IOS_APP_IDENTIFIER_PREFIX');
+    expect(setupGuide).toContain(
+      'Do not assume this prefix equals the Apple Developer Team ID',
     );
   });
 

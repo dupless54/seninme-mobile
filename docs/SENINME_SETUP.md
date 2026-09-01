@@ -61,7 +61,17 @@ The file must authorize package `me.senin.mobile` using the SHA-256 fingerprint 
 
 ### iOS Universal Links
 
-iOS is scoped to the `senin.me` associated domain. Universal Links require Senin.me to serve a valid Apple App Site Association file authorizing the fixed `me.senin.mobile` bundle ID under the real Senin.me Apple Developer Team ID. Do not publish a placeholder Team ID.
+iOS is scoped to the `senin.me` associated domain. Universal Links require Senin.me to serve:
+
+`https://senin.me/.well-known/apple-app-site-association`
+
+The matching AASA application identifier must be:
+
+`APP_IDENTIFIER_PREFIX.me.senin.mobile`
+
+Use the real 10-character **App Identifier Prefix** from the production application identifier / signed `application-identifier` entitlement. Do not assume this prefix equals the Apple Developer Team ID; existing Apple identifiers may use a different prefix. The Team ID remains the signing/provisioning identity, while the App Identifier Prefix is the value used in the AASA `appID`.
+
+The matching AASA detail must cover the intended Senin.me paths without exclusions. Run `yarn verify:domain-association` with `SENINME_IOS_APP_IDENTIFIER_PREFIX` and the production Android signing fingerprint before treating verified links as release-ready.
 
 ## Validation
 

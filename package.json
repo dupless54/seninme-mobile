@@ -16,7 +16,8 @@
     "test": "detox test --configuration ios.sim.debug",
     "test:unit": "jest",
     "test:unit:watch": "jest --watch",
-    "test-ipad": "detox test --configuration ios.sim.debug -n 'iPad (10th generation)'"
+    "test-ipad": "detox test --configuration ios.sim.debug -n 'iPad (10th generation)'",
+    "verify:domain-association": "node scripts/verify-domain-association.cjs"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^1.21.0",

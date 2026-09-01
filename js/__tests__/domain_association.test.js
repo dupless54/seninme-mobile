@@ -49,6 +49,16 @@ describe('Senin.me verified domain association', () => {
     expect(verifier).toContain('response.statusCode !== 200');
   });
 
+  test('requires Android 15 dynamic rules to preserve all-path coverage', () => {
+    expect(verifier).toContain('function androidDynamicComponents(statement)');
+    expect(verifier).toContain('function enablesAllAndroidPaths(components)');
+    expect(verifier).toContain('dynamic_app_link_components');
+    expect(verifier).toContain('dynamicConfigs.length > 1');
+    expect(verifier).toContain(
+      'dynamic App Links rules do not guarantee every Senin.me URL opens in the app',
+    );
+  });
+
   test('requires universal-link coverage for every Senin.me path', () => {
     expect(verifier).toContain('function enablesAllApplePaths(detail)');
     expect(verifier).toContain('/^NOT\\s+/i.test(path.trim())');

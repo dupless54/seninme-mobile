@@ -31,7 +31,8 @@ describe('Senin.me verified domain association', () => {
     expect(verifier).not.toContain('SENINME_IOS_TEAM_ID');
   });
 
-  test('requires the real Apple App Identifier Prefix', () => {
+  test('validates production signing identifiers before verification', () => {
+    expect(verifier).toContain('/^[A-F0-9]{64}$/');
     expect(verifier).toContain('function requireAppleAppIdentifierPrefix()');
     expect(verifier).toContain('/^[A-Za-z0-9]{10}$/');
     expect(verifier).toContain(
@@ -39,10 +40,13 @@ describe('Senin.me verified domain association', () => {
     );
   });
 
-  test('requires universal-link coverage for all Senin.me paths', () => {
+  test('requires universal-link coverage for every Senin.me path', () => {
     expect(verifier).toContain('function enablesAllApplePaths(detail)');
-    expect(verifier).toContain('component?.exclude !== true');
-    expect(verifier).toContain('&& enablesAllApplePaths(detail)');
+    expect(verifier).toContain('/^NOT\\s+/i.test(path.trim())');
+    expect(verifier).toContain(
+      'components.some(component => component?.exclude === true)',
+    );
+    expect(verifier).toContain('hasAllPaths && !hasExclusion');
   });
 
   test('exposes an explicit production verification command', () => {

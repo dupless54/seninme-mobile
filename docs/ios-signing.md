@@ -5,7 +5,7 @@ The Senin.me iOS application uses the following application identifiers:
 - Main application: `me.senin.mobile`
 - Share Extension: `me.senin.mobile.ShareExtension`
 
-The repository intentionally does not commit an Apple Developer Team ID, provisioning profile UUID, Match profile name, signing certificate identity, APNs credential, or upstream Discourse signing configuration.
+The repository intentionally does not commit an Apple Developer Team ID, App Identifier Prefix, provisioning profile UUID, Match profile name, signing certificate identity, APNs credential, or upstream Discourse signing configuration.
 
 ## Local and release signing
 
@@ -19,6 +19,8 @@ Before creating a device, TestFlight, or App Store build:
 
 The committed Xcode project deliberately leaves `DEVELOPMENT_TEAM` unset. Automatic signing becomes release-usable only after a Senin.me-owned Apple Developer team is selected locally or injected by the release pipeline.
 
+`SENINME_IOS_TEAM_ID` identifies the Apple Developer team for signing and provisioning. It is not automatically the value that belongs at the front of the AASA `appID`. The AASA value uses the app's **App Identifier Prefix**, which must be confirmed from the production application identifier or the signed app's `application-identifier` entitlement. Existing Apple identifiers can have a prefix that differs from the Team ID.
+
 ## Push notifications
 
 Remote push is intentionally disabled while the Senin.me push relay, Firebase/APNs configuration, and Discourse allowlist configuration are not available. The repository therefore does not currently request the `aps-environment` entitlement.
@@ -27,4 +29,11 @@ When the Senin.me push infrastructure is ready, add the Apple Push Notifications
 
 ## Associated domains
 
-Universal Links, Handoff, and web credentials remain scoped to `senin.me`. The production site must serve the corresponding Apple App Site Association file for the final Senin.me Team ID and application identifier before Universal Links can be considered release-ready.
+Universal Links remain scoped to `senin.me`. Before Universal Links can be considered release-ready:
+
+1. confirm the production App Identifier Prefix for `me.senin.mobile`;
+2. publish the AASA application ID as `APP_IDENTIFIER_PREFIX.me.senin.mobile`;
+3. ensure the matching AASA detail covers all intended Senin.me paths without exclusions;
+4. run `yarn verify:domain-association` with `SENINME_IOS_APP_IDENTIFIER_PREFIX` and the production Android signing fingerprint.
+
+Do not substitute the Team ID for the App Identifier Prefix unless the production identifier proves they are identical.

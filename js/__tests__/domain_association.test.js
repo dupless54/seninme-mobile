@@ -10,6 +10,7 @@ const readText = relativePath =>
 
 const androidManifest = readText('android/app/src/main/AndroidManifest.xml');
 const iosEntitlements = readText('ios/Discourse/Discourse.entitlements');
+const iosSigningGuide = readText('docs/ios-signing.md');
 const verifier = readText('scripts/verify-domain-association.cjs');
 const packageJson = readText('package.json');
 
@@ -47,6 +48,16 @@ describe('Senin.me verified domain association', () => {
       'components.some(component => component?.exclude === true)',
     );
     expect(verifier).toContain('hasAllPaths && !hasExclusion');
+  });
+
+  test('documents that signing Team ID is not the AASA prefix', () => {
+    expect(iosSigningGuide).toContain(
+      'SENINME_IOS_TEAM_ID` is a signing/provisioning identity',
+    );
+    expect(iosSigningGuide).toContain('App Identifier Prefix');
+    expect(iosSigningGuide).toContain(
+      'Do not substitute the Team ID for the App Identifier Prefix',
+    );
   });
 
   test('exposes an explicit production verification command', () => {

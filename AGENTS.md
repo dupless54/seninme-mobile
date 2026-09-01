@@ -22,10 +22,10 @@ This repository is a **single-site Senin.me mobile application** derived from th
 4. **Keep auth callbacks fail-closed.** Malformed/decrypt-failed payloads, missing nonce/site/key data, nonce mismatches, malformed percent encoding, and replayed successful callbacks must not apply credentials or crash the app.
 5. **Never pass a raw Senin.me custom-scheme query to the legacy Discourse callback parser.** Rebuild only the allowlisted `payload`, `otp`, and `oneTimePassword` parameters.
 6. **Do not restore the upstream Discourse push relay.** `APP_CONFIG.pushBaseUrl` stays `null` until a Senin.me-owned push relay and platform credentials are deliberately activated. `https://api.discourse.org` must not be used by this white-label app.
-7. **Push remains fail-closed until activation.** Firebase native autolinking, Android notification permissions, inherited iOS permission prompts, stale notification callbacks, and unused background notification capabilities stay disabled while `pushBaseUrl` is null.
-8. **Do not commit signing or store secrets.** Apple Team IDs, App Store Connect keys, Match credentials/repositories, Android keystores/passwords, Google Play service-account JSON, Firebase credentials, APNs keys, and production signing fingerprints belong in environment variables or external secret/file storage.
+7. **Push remains fail-closed until activation.** Firebase native autolinking, Android notification permissions, inherited iOS permission prompts, stale/pending/delivered notification state, and unused background notification capabilities stay disabled while `pushBaseUrl` is null.
+8. **Do not commit signing or store secrets.** Apple Team IDs, App Store Connect keys, Match credentials/repositories, Android keystores/passwords, Google Play service-account JSON, Firebase credentials, APNs keys, Apple App Identifier Prefix values, and production signing fingerprints belong in environment variables or external secret/file storage.
 9. **Never reuse upstream Discourse release identities or credentials.** Do not restore `org.discourse.DiscourseApp`, `com.discourse`, the Discourse Apple Team ID, `team@discourse.org`, or `discourse-org/discourse-mobile-keys`.
-10. **Domain association is cryptographic release configuration.** Production `assetlinks.json` must use the final Play/app signing SHA-256 fingerprint; the AASA file must use the real Senin.me Apple Team ID. Never commit placeholder identities as if verified.
+10. **Domain association is cryptographic release configuration.** Production `assetlinks.json` must use the final Play/app-signing SHA-256 fingerprint. The AASA application ID must be `<App Identifier Prefix>.me.senin.mobile`, where the prefix comes from the production application identifier / signed `application-identifier` entitlement. Do **not** assume the App Identifier Prefix equals the Apple Developer Team ID; they may differ. Never commit placeholder identities as if verified.
 
 ## Senin.me isolation layer
 
@@ -90,6 +90,7 @@ Remote push is intentionally disabled until Senin.me owns the complete infrastru
 - notification/boot/vibrate manifest permissions introduced by push dependencies are removed,
 - the inherited iOS notification permission prompt is suppressed,
 - inherited background-fetch/local-notification fallback is disabled,
+- pending and delivered iOS notifications from older inherited runtimes are cleared and the badge is reset when the disabled-push policy installs,
 - `aps-environment` and remote-notification/background-fetch capabilities must not be reintroduced accidentally.
 
 Push activation must be one reviewed change covering the Senin.me relay, Discourse allowlist, Firebase/APNs ownership, native linkage, permissions, signing/provisioning, background capabilities, tests, and store privacy disclosures.
@@ -109,6 +110,7 @@ Push activation must be one reviewed change covering the Senin.me relay, Discour
 - Main bundle ID: `me.senin.mobile`
 - Share Extension: `me.senin.mobile.ShareExtension`
 - Automatic signing is used in the project; real device/TestFlight/App Store builds require the Senin.me-owned Apple Developer team.
+- `SENINME_IOS_TEAM_ID` is a signing/provisioning identity. It must not be substituted for the App Identifier Prefix used by AASA unless the production application identifier proves the values are identical.
 - Remote push entitlement stays absent until push activation.
 - Associated domains stay scoped to `senin.me`.
 

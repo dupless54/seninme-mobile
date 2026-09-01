@@ -48,6 +48,14 @@ If Google Play App Signing is enabled, use the SHA-256 fingerprint of the app-si
 
 The verifier normalizes colon-separated or plain hexadecimal fingerprints and then requires exactly 32 SHA-256 bytes (64 hexadecimal characters). Invalid or truncated fingerprints fail before the association documents are accepted.
 
+### Android 15+ dynamic App Links
+
+Android 15 and later can refine verified links through `relation_extensions.delegate_permission/common.handle_all_urls.dynamic_app_link_components` inside `assetlinks.json`. Those rules are evaluated in order and can exclude paths, queries, or fragments even though the base relation is still `handle_all_urls`.
+
+Senin.me's contract is full-site link handling. If no dynamic rules are present, the broad native manifest scope remains valid. If dynamic rules are present, the verifier requires an unconditional all-path include (`"/": "*"` or `"/*"`) and rejects any exclusion that appears before that catch-all. It also rejects multiple dynamic rule configurations for the same Senin.me app because Android does not guarantee which one is used.
+
+Do not add dynamic App Links filters that narrow Senin.me coverage without updating the product contract, verifier, native routing tests, and documentation in the same reviewed change.
+
 ## Apple Associated Domains
 
 Publish this file without a redirect or filename extension:
@@ -96,10 +104,10 @@ The verifier fetches both production association endpoints and fails unless:
 
 1. both endpoints return HTTP 200 directly over HTTPS with no redirect;
 2. both responses are served as `application/json` and contain valid JSON;
-3. `assetlinks.json` authorizes `me.senin.mobile` for `handle_all_urls` with a valid configured release SHA-256 fingerprint;
+3. `assetlinks.json` authorizes `me.senin.mobile` for `handle_all_urls` with a valid configured release SHA-256 fingerprint and does not dynamically narrow full-site coverage on Android 15+;
 4. the Apple association document authorizes `APP_IDENTIFIER_PREFIX.me.senin.mobile` without exclusions and actually enables every Senin.me path for that application.
 
-Run this check whenever the Android signing certificate, Apple application identifier/signing identity, domain routing, CDN, reverse proxy, response headers, or association documents change.
+Run this check whenever the Android signing certificate, Apple application identifier/signing identity, domain routing, CDN, reverse proxy, response headers, dynamic App Links rules, or association documents change.
 
 ## Deployment rule
 

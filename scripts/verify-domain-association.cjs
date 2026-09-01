@@ -94,12 +94,56 @@ function fetchJson(path) {
   });
 }
 
+function androidDynamicComponents(statement) {
+  const relationExtension =
+    statement?.relation_extensions?.[HANDLE_ALL_URLS];
+
+  if (
+    !relationExtension ||
+    !Object.prototype.hasOwnProperty.call(
+      relationExtension,
+      'dynamic_app_link_components',
+    )
+  ) {
+    return null;
+  }
+
+  return relationExtension.dynamic_app_link_components;
+}
+
+function enablesAllAndroidPaths(components) {
+  if (!Array.isArray(components) || components.length === 0) {
+    return false;
+  }
+
+  const catchAllIndex = components.findIndex(component => {
+    const pathPattern = component?.['/'];
+    return (
+      component?.exclude !== true &&
+      (pathPattern === '*' || pathPattern === '/*') &&
+      component?.['?'] === undefined &&
+      component?.['#'] === undefined
+    );
+  });
+
+  if (catchAllIndex === -1) {
+    return false;
+  }
+
+  // Android 15+ evaluates dynamic rules in order and stops at the first
+  // match. An exclusion before the unconditional catch-all can therefore
+  // remove URLs from the app. Rules after the catch-all are unreachable.
+  return !components
+    .slice(0, catchAllIndex)
+    .some(component => component?.exclude === true);
+}
+
 function verifyAndroid(statements, expectedFingerprint) {
   if (!Array.isArray(statements)) {
     throw new Error('assetlinks.json must contain a JSON array');
   }
 
-  const match = statements.find(statement => {
+  const matches = statements.filter(statement => {
     const target = statement?.target;
     const fingerprints = target?.sha256_cert_fingerprints || [];
 
@@ -114,9 +158,28 @@ function verifyAndroid(statements, expectedFingerprint) {
     );
   });
 
-  if (!match) {
+  if (matches.length === 0) {
     throw new Error(
       `assetlinks.json does not authorize ${ANDROID_PACKAGE} with the configured release certificate fingerprint`,
+    );
+  }
+
+  const dynamicConfigs = matches
+    .map(statement => androidDynamicComponents(statement))
+    .filter(components => components !== null);
+
+  if (dynamicConfigs.length > 1) {
+    throw new Error(
+      'assetlinks.json declares multiple dynamic_app_link_components configurations for the Senin.me app',
+    );
+  }
+
+  if (
+    dynamicConfigs.length === 1 &&
+    !enablesAllAndroidPaths(dynamicConfigs[0])
+  ) {
+    throw new Error(
+      'assetlinks.json dynamic App Links rules do not guarantee every Senin.me URL opens in the app',
     );
   }
 }

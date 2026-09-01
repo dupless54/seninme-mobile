@@ -18,7 +18,15 @@ function requireEnvironment(name) {
 }
 
 function normalizeFingerprint(value) {
-  return value.replace(/\s+/g, '').toUpperCase();
+  const normalized = value.replace(/[:\s]+/g, '').toUpperCase();
+
+  if (!/^[A-F0-9]{64}$/.test(normalized)) {
+    throw new Error(
+      'SENINME_ANDROID_SHA256_CERT_FINGERPRINT must be a 32-byte SHA-256 certificate fingerprint',
+    );
+  }
+
+  return normalized;
 }
 
 function requireAppleAppIdentifierPrefix() {
@@ -104,21 +112,33 @@ function verifyAndroid(statements, expectedFingerprint) {
 
 function enablesAllApplePaths(detail) {
   const paths = detail?.paths;
-  if (Array.isArray(paths) && paths.some(path => path === '*' || path === '/*')) {
-    return true;
+  if (Array.isArray(paths)) {
+    const hasExclusion = paths.some(
+      path => typeof path === 'string' && /^NOT\s+/i.test(path.trim()),
+    );
+    const hasAllPaths = paths.some(path => path === '*' || path === '/*');
+
+    if (hasAllPaths && !hasExclusion) {
+      return true;
+    }
   }
 
   const components = detail?.components;
-  return (
-    Array.isArray(components) &&
-    components.some(component => {
-      const pathPattern = component?.['/'];
-      return (
-        component?.exclude !== true &&
-        (pathPattern === '*' || pathPattern === '/*')
-      );
-    })
-  );
+  if (!Array.isArray(components)) {
+    return false;
+  }
+
+  // An excluded component can carve paths out of a later catch-all rule. The
+  // Senin.me contract is intentionally stricter: all forum paths must be
+  // eligible, so any explicit exclusion makes this detail fail closed.
+  if (components.some(component => component?.exclude === true)) {
+    return false;
+  }
+
+  return components.some(component => {
+    const pathPattern = component?.['/'];
+    return pathPattern === '*' || pathPattern === '/*';
+  });
 }
 
 function verifyApple(document, appIdentifierPrefix) {

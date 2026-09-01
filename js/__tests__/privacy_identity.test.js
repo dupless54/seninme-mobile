@@ -33,9 +33,11 @@ describe('Senin.me mobile privacy identity', () => {
   test('declares no app tracking in the iOS privacy manifest', () => {
     const privacyManifest = read('ios/Discourse/PrivacyInfo.xcprivacy');
 
-    expect(privacyManifest).toContain('<key>NSPrivacyTracking</key>');
-    expect(privacyManifest).toContain('<false/>');
-    expect(privacyManifest).toContain('<key>NSPrivacyCollectedDataTypes</key>');
-    expect(privacyManifest).toContain('<array/>');
+    expect(privacyManifest).toMatch(
+      /<key>NSPrivacyTracking<\/key>\s*<false\/>/,
+    );
+    expect(privacyManifest).toMatch(
+      /<key>NSPrivacyCollectedDataTypes<\/key>\s*<array\/>/,
+    );
   });
 });

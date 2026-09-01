@@ -42,6 +42,13 @@ describe('Senin.me verified domain association', () => {
     );
   });
 
+  test('requires direct JSON association responses', () => {
+    expect(verifier).toContain('const JSON_CONTENT_TYPE = /^application\\/json\\b/i');
+    expect(verifier).toContain("response.headers['content-type'] || ''");
+    expect(verifier).toContain('association JSON must be served as application/json');
+    expect(verifier).toContain('response.statusCode !== 200');
+  });
+
   test('requires universal-link coverage for every Senin.me path', () => {
     expect(verifier).toContain('function enablesAllApplePaths(detail)');
     expect(verifier).toContain('/^NOT\\s+/i.test(path.trim())');

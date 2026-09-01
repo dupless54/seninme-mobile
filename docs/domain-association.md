@@ -44,6 +44,8 @@ Example shape:
 
 If Google Play App Signing is enabled, use the SHA-256 fingerprint of the app-signing certificate that Google Play actually uses to sign distributed builds, not merely the local upload key.
 
+The verifier normalizes colon-separated or plain hexadecimal fingerprints and then requires exactly 32 SHA-256 bytes (64 hexadecimal characters). Invalid or truncated fingerprints fail before the association documents are accepted.
+
 ## Apple Associated Domains
 
 Publish this file without a redirect or filename extension:
@@ -56,7 +58,9 @@ Its `applinks.details` section must authorize the application identifier formed 
 
 The App Identifier Prefix is the 10-character prefix in the production app identifier / `application-identifier` entitlement. Do not assume it is the Apple Developer Team ID: the two values are often identical for newer teams, but Apple explicitly allows them to differ for existing identifiers.
 
-Senin.me intends forum HTTPS URLs across the site to open in the app, so the matching detail must also authorize all paths. The verifier accepts the legacy `paths` form with `"*"` or `"/*"`, or the modern `components` form with an equivalent non-excluded `/` rule.
+Senin.me intends forum HTTPS URLs across the site to open in the app, so the matching detail must authorize all paths. The verifier accepts the legacy `paths` form with `"*"` or `"/*"`, or the modern `components` form with an equivalent catch-all `/` rule.
+
+Because the contract is **all Senin.me paths**, the verifier fails closed if the matching legacy `paths` array contains a `NOT ...` exclusion or if the matching modern `components` array contains any `exclude: true` component. A catch-all rule combined with an exclusion is not treated as full-site coverage.
 
 Example shape:
 
@@ -89,8 +93,8 @@ yarn verify:domain-association
 The verifier fetches both production association endpoints and fails unless:
 
 1. both endpoints return HTTP 200 directly;
-2. `assetlinks.json` authorizes `me.senin.mobile` for `handle_all_urls` with the configured release fingerprint;
-3. the Apple association document authorizes `APP_IDENTIFIER_PREFIX.me.senin.mobile` and actually enables all Senin.me paths for that application.
+2. `assetlinks.json` authorizes `me.senin.mobile` for `handle_all_urls` with a valid configured release SHA-256 fingerprint;
+3. the Apple association document authorizes `APP_IDENTIFIER_PREFIX.me.senin.mobile` without exclusions and actually enables every Senin.me path for that application.
 
 Run this check whenever the Android signing certificate, Apple application identifier/signing identity, domain routing, CDN, reverse proxy, or association documents change.
 

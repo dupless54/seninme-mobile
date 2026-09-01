@@ -21,6 +21,18 @@ function normalizeFingerprint(value) {
   return value.replace(/\s+/g, '').toUpperCase();
 }
 
+function requireAppleAppIdentifierPrefix() {
+  const value = requireEnvironment('SENINME_IOS_APP_IDENTIFIER_PREFIX');
+
+  if (!/^[A-Za-z0-9]{10}$/.test(value)) {
+    throw new Error(
+      'SENINME_IOS_APP_IDENTIFIER_PREFIX must be the 10-character App Identifier Prefix from the signed application identifier',
+    );
+  }
+
+  return value;
+}
+
 function fetchJson(path) {
   const url = `https://${DOMAIN}${path}`;
 
@@ -109,8 +121,8 @@ function enablesAllApplePaths(detail) {
   );
 }
 
-function verifyApple(document, teamId) {
-  const expectedAppId = `${teamId}.${IOS_BUNDLE_ID}`;
+function verifyApple(document, appIdentifierPrefix) {
+  const expectedAppId = `${appIdentifierPrefix}.${IOS_BUNDLE_ID}`;
   const details = document?.applinks?.details;
 
   if (!Array.isArray(details)) {
@@ -139,7 +151,7 @@ async function main() {
   const fingerprint = normalizeFingerprint(
     requireEnvironment('SENINME_ANDROID_SHA256_CERT_FINGERPRINT'),
   );
-  const teamId = requireEnvironment('SENINME_IOS_TEAM_ID');
+  const appIdentifierPrefix = requireAppleAppIdentifierPrefix();
 
   const [assetLinks, appleAssociation] = await Promise.all([
     fetchJson('/.well-known/assetlinks.json'),
@@ -147,7 +159,7 @@ async function main() {
   ]);
 
   verifyAndroid(assetLinks, fingerprint);
-  verifyApple(appleAssociation, teamId);
+  verifyApple(appleAssociation, appIdentifierPrefix);
 
   console.log(
     `Verified Android App Links and iOS Universal Links for https://${DOMAIN}`,

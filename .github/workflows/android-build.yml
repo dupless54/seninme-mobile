@@ -7,7 +7,10 @@ on:
   pull_request:
 
 concurrency:
-  group: android-build-${{ github.head_ref || github.run_id }}
+  # Isolate pull requests by PR number. Stacked/sync PRs may reuse another
+  # branch as their head; github.head_ref would let those runs cancel the
+  # original feature PR's exact-head build.
+  group: android-build-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:

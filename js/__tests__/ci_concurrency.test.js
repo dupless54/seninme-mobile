@@ -15,12 +15,19 @@ const workflows = [
 ];
 
 describe('Senin.me pull-request CI isolation', () => {
-  test.each(workflows)('%s isolates concurrency by PR number', (_name, file) => {
-    const workflow = read(file);
+  test.each(workflows)(
+    '%s isolates concurrency by PR number',
+    (_name, file) => {
+      const workflow = read(file);
+      const concurrencyGroup = workflow
+        .split('\n')
+        .find(line => line.trim().startsWith('group:'));
 
-    expect(workflow).toContain(
-      '${{ github.event.pull_request.number || github.ref }}',
-    );
-    expect(workflow).not.toContain('github.head_ref');
-  });
+      expect(concurrencyGroup).toBeDefined();
+      expect(concurrencyGroup).toContain(
+        '${{ github.event.pull_request.number || github.ref }}',
+      );
+      expect(concurrencyGroup).not.toContain('github.head_ref');
+    },
+  );
 });

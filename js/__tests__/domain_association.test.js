@@ -27,7 +27,16 @@ describe('Senin.me verified domain association', () => {
     expect(verifier).toContain("const ANDROID_PACKAGE = 'me.senin.mobile'");
     expect(verifier).toContain("const IOS_BUNDLE_ID = 'me.senin.mobile'");
     expect(verifier).toContain('SENINME_ANDROID_SHA256_CERT_FINGERPRINT');
-    expect(verifier).toContain('SENINME_IOS_TEAM_ID');
+    expect(verifier).toContain('SENINME_IOS_APP_IDENTIFIER_PREFIX');
+    expect(verifier).not.toContain('SENINME_IOS_TEAM_ID');
+  });
+
+  test('requires the real Apple App Identifier Prefix', () => {
+    expect(verifier).toContain('function requireAppleAppIdentifierPrefix()');
+    expect(verifier).toContain('/^[A-Za-z0-9]{10}$/');
+    expect(verifier).toContain(
+      'const expectedAppId = `${appIdentifierPrefix}.${IOS_BUNDLE_ID}`',
+    );
   });
 
   test('requires universal-link coverage for all Senin.me paths', () => {

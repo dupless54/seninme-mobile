@@ -17,6 +17,7 @@ const androidManifest = readText('android/app/src/main/AndroidManifest.xml');
 const androidRootGradle = readText('android/build.gradle');
 const androidAppGradle = readText('android/app/build.gradle');
 const iosInfoPlist = readText('ios/Discourse/Info.plist');
+const iosEntitlements = readText('ios/Discourse/Discourse.entitlements');
 
 describe('Senin.me disabled push policy', () => {
   test('keeps remote push disabled in application configuration', () => {
@@ -35,6 +36,15 @@ describe('Senin.me disabled push policy', () => {
     );
     expect(pushPolicy).toContain('PushNotificationIOS.requestPermissions');
     expect(pushPolicy).toContain(
+      'PushNotificationIOS.removeAllPendingNotificationRequests()',
+    );
+    expect(pushPolicy).toContain(
+      'PushNotificationIOS.removeAllDeliveredNotifications()',
+    );
+    expect(pushPolicy).toContain(
+      'PushNotificationIOS.setApplicationIconBadgeNumber(0)',
+    );
+    expect(pushPolicy).toContain(
       'DiscourseClass.prototype._initBackgroundFetch = async function () {}',
     );
     expect(pushPolicy).toContain(
@@ -42,6 +52,7 @@ describe('Senin.me disabled push policy', () => {
     );
     expect(iosInfoPlist).not.toContain('<string>fetch</string>');
     expect(iosInfoPlist).not.toContain('<string>remote-notification</string>');
+    expect(iosEntitlements).not.toContain('<key>aps-environment</key>');
   });
 
   test('preserves unrelated Android permission batches', () => {

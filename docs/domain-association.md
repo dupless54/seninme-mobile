@@ -12,6 +12,8 @@ Senin.me uses verified HTTPS links so forum URLs can open directly in the native
 
 The application-side declarations are only half of the trust relationship. The `senin.me` web server must publish matching association documents.
 
+Both production association endpoints must be served directly over HTTPS with HTTP 200, without redirects, as valid JSON with a response `Content-Type` beginning with `application/json`.
+
 ## Android Digital Asset Links
 
 Publish this file without a redirect:
@@ -92,11 +94,12 @@ yarn verify:domain-association
 
 The verifier fetches both production association endpoints and fails unless:
 
-1. both endpoints return HTTP 200 directly;
-2. `assetlinks.json` authorizes `me.senin.mobile` for `handle_all_urls` with a valid configured release SHA-256 fingerprint;
-3. the Apple association document authorizes `APP_IDENTIFIER_PREFIX.me.senin.mobile` without exclusions and actually enables every Senin.me path for that application.
+1. both endpoints return HTTP 200 directly over HTTPS with no redirect;
+2. both responses are served as `application/json` and contain valid JSON;
+3. `assetlinks.json` authorizes `me.senin.mobile` for `handle_all_urls` with a valid configured release SHA-256 fingerprint;
+4. the Apple association document authorizes `APP_IDENTIFIER_PREFIX.me.senin.mobile` without exclusions and actually enables every Senin.me path for that application.
 
-Run this check whenever the Android signing certificate, Apple application identifier/signing identity, domain routing, CDN, reverse proxy, or association documents change.
+Run this check whenever the Android signing certificate, Apple application identifier/signing identity, domain routing, CDN, reverse proxy, response headers, or association documents change.
 
 ## Deployment rule
 

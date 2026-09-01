@@ -43,9 +43,13 @@ describe('Senin.me verified domain association', () => {
   });
 
   test('requires direct JSON association responses', () => {
-    expect(verifier).toContain('const JSON_CONTENT_TYPE = /^application\\/json\\b/i');
+    expect(verifier).toContain(
+      'const JSON_CONTENT_TYPE = /^application\\/json\\b/i',
+    );
     expect(verifier).toContain("response.headers['content-type'] || ''");
-    expect(verifier).toContain('association JSON must be served as application/json');
+    expect(verifier).toContain(
+      'association JSON must be served as application/json',
+    );
     expect(verifier).toContain('response.statusCode !== 200');
   });
 
@@ -70,7 +74,7 @@ describe('Senin.me verified domain association', () => {
 
   test('documents that signing Team ID is not the AASA prefix', () => {
     expect(iosSigningGuide).toContain(
-      'SENINME_IOS_TEAM_ID` is a signing/provisioning identity',
+      '`SENINME_IOS_TEAM_ID` identifies the Apple Developer team for signing and provisioning',
     );
     expect(iosSigningGuide).toContain('App Identifier Prefix');
     expect(iosSigningGuide).toContain(

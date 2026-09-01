@@ -119,17 +119,13 @@ class HomeScreen extends React.Component {
     this._siteManager.unsubscribe(this._onChangeSites);
   }
 
-  onChangeSites(e) {
-    if (this._siteManager.isLoading() !== this.state.loadingSites) {
-      this.setState({ loadingSites: this._siteManager.isLoading() });
-    }
-    if (e && e.event) {
-      this.setState({
-        data: this._siteManager.listSites(),
-        hotTopicsHidden: this._siteManager.hotTopicsHidden,
-        siteURLsHidden: this._siteManager.siteURLsHidden,
-      });
-    }
+  onChangeSites() {
+    this.setState({
+      data: this._siteManager.listSites(),
+      hotTopicsHidden: this._siteManager.hotTopicsHidden,
+      loadingSites: this._siteManager.isLoading(),
+      siteURLsHidden: this._siteManager.siteURLsHidden,
+    });
   }
 
   async pullDownToRefresh() {
@@ -144,6 +140,10 @@ class HomeScreen extends React.Component {
         feedRefreshKey: state.feedRefreshKey + 1,
       }));
     }
+  }
+
+  retryConfiguredSite() {
+    return this._siteManager.retryConfiguredSite();
   }
 
   shouldDisplayOnBoarding() {
@@ -247,12 +247,26 @@ class HomeScreen extends React.Component {
 
   _renderSites() {
     const theme = this.context;
+
+    if (APP_CONFIG.singleSite && this.state.loadingSites) {
+      return <Components.SingleSiteRecovery loading={true} />;
+    }
+
     if (this.state.loadingSites) {
       return <View style={{ flex: 1 }} />;
     }
 
     if (APP_CONFIG.singleSite && this.state.data.length > 0) {
       return this._renderSingleSiteHome(this.state.data[0]);
+    }
+
+    if (APP_CONFIG.singleSite) {
+      return (
+        <Components.SingleSiteRecovery
+          loading={false}
+          onRetry={() => this.retryConfiguredSite()}
+        />
+      );
     }
 
     if (this.shouldDisplayOnBoarding()) {

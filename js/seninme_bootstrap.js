@@ -8,6 +8,9 @@ import SiteManager from './site_manager';
 import APP_CONFIG from './app_config';
 
 const normalizeUrl = url => (url || '').replace(/\/+$/, '');
+const configuredSiteUrl = normalizeUrl(APP_CONFIG.defaultSiteUrl);
+const isConfiguredSite = site =>
+  Boolean(site) && normalizeUrl(site.url) === configuredSiteUrl;
 
 SiteManager.prototype.handleAuthPayload = function (payload) {
   let decrypted;
@@ -89,16 +92,18 @@ SiteManager.prototype.load = function () {
         return;
       }
 
-      const configuredUrl = normalizeUrl(APP_CONFIG.defaultSiteUrl);
-      let configuredSite = storedSites.find(
-        site => normalizeUrl(site.url) === configuredUrl,
-      );
+      let configuredSite = storedSites.find(site => isConfiguredSite(site));
 
       if (!configuredSite) {
         configuredSite = await Site.fromTerm(APP_CONFIG.defaultSiteUrl);
       }
 
-      if (!configuredSite) {
+      if (!isConfiguredSite(configuredSite)) {
+        if (configuredSite) {
+          console.log(
+            `Ignoring redirected non-Senin.me site ${configuredSite.url}`,
+          );
+        }
         this.sites = [];
         return;
       }
@@ -132,12 +137,60 @@ SiteManager.prototype.load = function () {
     });
 };
 
+SiteManager.prototype.retryConfiguredSite = async function () {
+  if (!APP_CONFIG.singleSite || this._loading) {
+    return false;
+  }
+
+  this._loading = true;
+  this._onChange();
+
+  try {
+    const configuredSite = await Site.fromTerm(APP_CONFIG.defaultSiteUrl);
+
+    if (!isConfiguredSite(configuredSite)) {
+      if (configuredSite) {
+        console.log(
+          `Ignoring redirected non-Senin.me site ${configuredSite.url}`,
+        );
+      }
+      this.sites = [];
+      return false;
+    }
+
+    configuredSite.createdAt = Date.now();
+    this.sites = [configuredSite];
+    this.save();
+    this.updateNativeMenu();
+
+    try {
+      const latestSite = await configuredSite.ensureLatestApi();
+      if (latestSite) {
+        configuredSite.apiVersion = latestSite.apiVersion;
+        configuredSite.icon = latestSite.icon || configuredSite.icon;
+        configuredSite.lastChecked = Date.now();
+      }
+    } catch (error) {
+      console.log('Failed to refresh recovered Senin.me site', error);
+    }
+
+    return true;
+  } catch (error) {
+    console.log('Failed to recover configured Senin.me site', error);
+    this.sites = [];
+    return false;
+  } finally {
+    this._loading = false;
+    this._onChange();
+  }
+};
+
 SiteManager.prototype.add = function (site) {
   if (!APP_CONFIG.singleSite) {
     return;
   }
 
-  if (normalizeUrl(site.url) !== normalizeUrl(APP_CONFIG.defaultSiteUrl)) {
+  if (!isConfiguredSite(site)) {
     console.log(`Ignoring non-Senin.me site ${site.url}`);
     return;
   }

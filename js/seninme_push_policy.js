@@ -59,6 +59,13 @@ export const installPushPolicy = DiscourseClass => {
   if (Platform.OS === 'ios') {
     PushNotificationIOS.requestPermissions = () =>
       Promise.resolve({ alert: false, badge: false, sound: false });
+
+    // An upgraded install can still have local notifications scheduled by the
+    // inherited background fallback. Clear both pending and already-delivered
+    // notifications before the Senin.me runtime starts handling app events.
+    PushNotificationIOS.removeAllPendingNotificationRequests();
+    PushNotificationIOS.removeAllDeliveredNotifications();
+    PushNotificationIOS.setApplicationIconBadgeNumber(0);
   }
 
   // Disable the inherited background local-notification fallback and ignore

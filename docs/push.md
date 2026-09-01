@@ -14,11 +14,13 @@ While `APP_CONFIG.pushBaseUrl` is `null`:
 - The Android Firebase adapter has no static Firebase imports and returns no-op messaging handlers.
 - The Google Services Gradle plugin is not configured or applied.
 - iOS does not surface the inherited notification permission prompt.
+- iOS has no `aps-environment` entitlement in the application entitlement file.
 - The inherited iOS background local-notification fallback is disabled.
-- The unused iOS `fetch` background mode is removed while no background-fetch task is registered.
+- Pending and delivered iOS notifications left by an older inherited runtime are cleared when the Senin.me policy installs, and the application badge is reset.
+- The unused iOS `fetch` and `remote-notification` background modes are absent while no push/background-fetch service is configured.
 - Stale notification callbacks from previous installs are ignored by the Senin.me runtime policy.
 
-This keeps a development or first production build from asking users for a capability that Senin.me cannot yet deliver or advertising an unused background capability to iOS.
+This keeps a development or first production build from asking users for a capability that Senin.me cannot yet deliver or advertising unused push/background capabilities to iOS.
 
 ## Enabling push later
 
@@ -32,7 +34,7 @@ Required pieces:
 4. Restore Android React Native Firebase autolinking and the Firebase Messaging adapter.
 5. Restore the Google Services Gradle plugin and provide the Senin.me `google-services.json` through the release environment.
 6. Restore only the Android notification permissions actually required by the chosen Firebase Messaging implementation.
-7. Configure Senin.me-owned APNs capabilities, certificates/keys, and provisioning for iOS.
+7. Configure Senin.me-owned APNs capabilities, certificates/keys, provisioning, and the `aps-environment` entitlement for iOS.
 8. Replace the disabled iOS notification runtime policy with the final permission-request UX and restore background capabilities only if the final implementation actually needs them.
 9. Update App Store and Google Play privacy disclosures in the same release if the enabled behavior changes collected data or tracking declarations.
 10. Run exact-head Linting, Jest, Android Build, and iOS tests before merge.

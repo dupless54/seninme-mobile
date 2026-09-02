@@ -4,12 +4,15 @@
 import { Linking } from 'react-native';
 import './seninme_bootstrap';
 import Discourse from './Discourse';
+import { installPushPolicy } from './seninme_push_policy';
 import {
   buildSharedTopicUrl,
   isSeninMeUrl,
   isUserApiAuthUrl,
   parseSeninMeUrl,
 } from './seninme_links';
+
+installPushPolicy(Discourse);
 
 const originalHandleOpenUrl = Discourse.prototype._handleOpenUrl;
 const originalOpenUrl = Discourse.prototype.openUrl;

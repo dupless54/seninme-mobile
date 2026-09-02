@@ -1,22 +1,15 @@
-import firebase from '@react-native-firebase/app';
-import '@react-native-firebase/messaging';
-import APP_CONFIG from '../app_config';
+/* @flow */
+'use strict';
 
-const noopMessaging = {
+// Senin.me remote push is intentionally fail-closed until the app owns and
+// configures its Firebase project and push relay. Keep this adapter free of
+// static @react-native-firebase imports so Metro cannot initialize an
+// unconfigured native Firebase module.
+const messaging = {
   getToken: async () => null,
   onTokenRefresh: () => () => {},
   onMessage: () => () => {},
   onNotificationOpenedApp: () => () => {},
 };
-
-let messaging = noopMessaging;
-
-if (APP_CONFIG.pushBaseUrl) {
-  try {
-    messaging = firebase.messaging();
-  } catch (error) {
-    console.warn('Senin.me Firebase Messaging is not configured', error);
-  }
-}
 
 export default messaging;

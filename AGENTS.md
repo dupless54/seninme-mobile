@@ -1,206 +1,181 @@
-# AGENTS.md - Discourse Mobile Codebase Guide
+# AGENTS.md — Senin.me Mobile Engineering Guide
 
-This document provides guidance for AI agents working on the Discourse Mobile codebase.
+This repository is a **single-site Senin.me mobile application** derived from the upstream open-source DiscourseMobile project. Treat upstream DiscourseMobile as the compatibility base, but preserve the Senin.me white-label security and product boundaries described here.
 
-## Project Overview
+## Project identity
 
-**Discourse Mobile** is a native iOS and Android application for [Discourse](https://discourse.org) forums, built with React Native. It allows users to connect to multiple Discourse communities, receive push notifications, browse topics, and authenticate via OAuth2.
+- App name: `Senin.me`
+- Community: `https://senin.me`
+- Runtime mode: single-site only
+- Android application ID: `me.senin.mobile`
+- iOS application bundle ID: `me.senin.mobile`
+- iOS Share Extension bundle ID: `me.senin.mobile.ShareExtension`
+- Custom URL scheme: `seninme`
+- User API Key callback: `seninme://auth_redirect`
+- React Native root component/internal Xcode project name may remain `Discourse` to minimize upstream divergence. Do not treat internal project names as store identity.
 
-### Technology Stack
+## Non-negotiable product and security invariants
 
-- **Framework**: React Native
-- **JS Engine**: Hermes
-- **Navigation**: React Navigation v6 (Stack + Bottom Tabs)
-- **State**: React hooks, Context (ThemeContext), AsyncStorage
-- **Push Notifications**: Firebase Cloud Messaging (FCM)
-- **Authentication**: OAuth2 via Safari Web Auth with RSA encryption
-- **Testing**: Detox (e2e), Jest (unit)
-- **Languages**: JavaScript, Swift (iOS Share Extension), Kotlin (Android)
+1. **Do not restore multi-site product behavior in the Senin.me runtime.** `APP_CONFIG.singleSite` is the runtime boundary. Legacy multi-site code may remain for upstream compatibility but must not become reachable from the Senin.me UX.
+2. **Only `https://senin.me` is an in-app community origin.** External HTTP(S) URLs must not fall through to the legacy add-site flow or become a stored community.
+3. **Revalidate discovery results after redirects.** `Site.fromTerm()` may follow redirects; single-site startup, retry, and add paths must accept the result only when its normalized final URL is exactly the configured Senin.me URL.
+4. **Keep auth callbacks fail-closed.** Malformed/decrypt-failed payloads, missing nonce/site/key data, nonce mismatches, malformed percent encoding, and replayed successful callbacks must not apply credentials or crash the app.
+5. **Never pass a raw Senin.me custom-scheme query to the legacy Discourse callback parser.** Rebuild only the allowlisted `payload`, `otp`, and `oneTimePassword` parameters.
+6. **Do not restore the upstream Discourse push relay.** `APP_CONFIG.pushBaseUrl` stays `null` until a Senin.me-owned push relay and platform credentials are deliberately activated. `https://api.discourse.org` must not be used by this white-label app.
+7. **Push remains fail-closed until activation.** Firebase native autolinking, Android notification permissions, inherited iOS permission prompts, stale/pending/delivered notification state, and unused background notification capabilities stay disabled while `pushBaseUrl` is null.
+8. **Do not commit signing or store secrets.** Apple Team IDs, App Store Connect keys, Match credentials/repositories, Android keystores/passwords, Google Play service-account JSON, Firebase credentials, APNs keys, Apple App Identifier Prefix values, and production signing fingerprints belong in environment variables or external secret/file storage.
+9. **Never reuse upstream Discourse release identities or credentials.** Do not restore `org.discourse.DiscourseApp`, `com.discourse`, the Discourse Apple Team ID, `team@discourse.org`, or `discourse-org/discourse-mobile-keys`.
+10. **Domain association is cryptographic release configuration.** Production `assetlinks.json` must use the final Play/app-signing SHA-256 fingerprint. The AASA application ID must be `<App Identifier Prefix>.me.senin.mobile`, where the prefix comes from the production application identifier / signed `application-identifier` entitlement. Do **not** assume the App Identifier Prefix equals the Apple Developer Team ID; they may differ. Never commit placeholder identities as if verified.
 
-## Project Structure
+## Senin.me isolation layer
 
-```
-DiscourseMobile/
-├── js/                          # Main JavaScript source
-│   ├── Discourse.js             # Root app component, navigation, lifecycle
-│   ├── site_manager.js          # Multi-site management, auth tokens
-│   ├── site.js                  # Site model, API interactions
-│   ├── DiscourseUtils.js        # Notification routing logic
-│   ├── ThemeContext.js          # Dark/light theme configuration
-│   ├── screens/                 # Screen components
-│   │   ├── HomeScreen.js        # Main sites list, topic viewing
-│   │   ├── NotificationsScreen.js
-│   │   ├── DiscoverScreen.js    # Site discovery
-│   │   ├── AddSiteScreen.js     # Connect to new sites
-│   │   ├── SettingsScreen.js
-│   │   ├── WebViewScreen.js     # In-app web content
-│   │   └── *Components/         # Screen-specific sub-components
-│   ├── platforms/               # Platform-specific implementations
-│   │   ├── firebase.ios.js
-│   │   ├── firebase.android.js
-│   │   └── background-fetch.*.js
-│   └── locale/                  # 49 language translation files (JSON)
-├── lib/                         # Utility libraries
-│   ├── fetch.js                 # Custom fetch wrapper
-│   ├── jsencrypt.js             # RSA encryption
-│   └── random-bytes.js          # CSPRNG utility
-├── ios/                         # iOS native code
-│   ├── Discourse/               # Main app target
-│   ├── ShareExtension/          # iOS Share Extension (Swift)
-│   └── Podfile                  # CocoaPods dependencies
-├── android/                     # Android native code
-│   └── app/src/main/java/com/discourse/
-├── e2e/                         # Detox e2e tests
-└── fastlane/                    # CI/CD automation
-```
+Prefer Senin.me-specific behavior in these files instead of broad upstream rewrites:
 
-## Key Files
+- `js/app_config.js` — app/site/scheme/push configuration
+- `js/seninme_app.js` — deep-link and external-navigation overrides
+- `js/seninme_bootstrap.js` — single-site SiteManager/auth/recovery overrides
+- `js/seninme_links.js` — Senin.me URL parsing and origin boundaries
+- `js/seninme_push_policy.js` — disabled-push runtime policy
 
-| File                       | Purpose                                                       |
-| -------------------------- | ------------------------------------------------------------- |
-| `js/Discourse.js`          | Root component, navigation setup, deep linking, auth handling |
-| `js/site_manager.js`       | Manages connected sites, auth tokens, device registration     |
-| `js/site.js`               | Site model class, API calls, basic info fetching              |
-| `js/DiscourseUtils.js`     | Maps 37+ notification types to endpoints and icons            |
-| `js/ThemeContext.js`       | Theme definitions (colors, fonts) for light/dark mode         |
-| `js/screens/HomeScreen.js` | Main UI with draggable site list and topic viewing            |
+Keep changes to upstream-heavy files as small as practical. This reduces future DiscourseMobile sync cost.
 
-## Architecture Patterns
+## Important application areas
 
-### Platform-Specific Code
+- `js/Discourse.js` — upstream root navigation/lifecycle implementation
+- `js/site_manager.js` — upstream site/auth/device machinery; Senin.me overrides parts in `seninme_bootstrap.js`
+- `js/site.js` — Discourse site discovery/API model
+- `js/screens/HomeScreen.js` — native Senin.me home and recovery routing
+- `js/screens/NotificationsScreen.js` — authenticated native notification state
+- `js/screens/WebViewScreenComponents/WebViewComponent.js` — in-app Senin.me WebView boundary
+- `e2e/onboarding.test.js` — single-site native shell and WebView Detox coverage
+- `e2e/topiclist.test.js` — topic-list Detox coverage
+- `fastlane/` — Senin.me-only release automation
+- `scripts/verify-domain-association.cjs` — production App Links/Universal Links verifier
 
-Use file suffixes for platform divergence:
+## Authentication flow
 
-- `*.ios.js` - iOS-specific implementation
-- `*.android.js` - Android-specific implementation
+The white-label auth flow is Discourse User API Key authentication, not a generic multi-site onboarding flow:
 
-The bundler automatically selects the correct file based on platform.
+1. Senin.me generates an authorization URL for the configured community.
+2. The callback target is `seninme://auth_redirect`.
+3. The Senin.me deep-link parser validates/sanitizes the callback query.
+4. The legacy parser receives only a rebuilt allowlisted callback URL.
+5. The encrypted payload must decrypt and parse successfully.
+6. Nonce, active nonce site, and API key must be valid.
+7. On success, consume `_nonce` and `_nonceSite` before asynchronous refresh work so the callback cannot be replayed.
 
-### Component Organization
+The Discourse server must allow `seninme://auth_redirect` in `allowed user api auth redirects`.
 
-- Screens in `js/screens/`
-- Screen-specific components in `js/screens/{ScreenName}Components/`
-- Shared components in `js/screens/CommonComponents/`
+## Single-site recovery
 
-### State Management
+When the configured community cannot be discovered, show the branded native recovery state rather than inherited add-community onboarding.
 
-- **Local state**: React `useState` hooks
-- **App-wide theme**: `ThemeContext` (React Context)
-- **Site data**: `SiteManager` singleton class
-- **Persistence**: `AsyncStorage` for local storage
+`retryConfiguredSite()` must:
 
-### Authentication Flow
+- refuse operation outside single-site mode,
+- refuse a second retry while recovery is already in flight,
+- discover only `APP_CONFIG.defaultSiteUrl`,
+- revalidate the final discovered URL after redirects,
+- persist only a valid Senin.me site,
+- emit the normal SiteManager change event when complete.
 
-1. User initiates OAuth in `AddSiteScreen`
-2. `SiteManager` generates auth URL with state/challenge
-3. Safari Web Auth opens Discourse authorization page
-4. User approves, redirected to `discourse://auth_redirect`
-5. App exchanges code for token using RSA encryption
-6. Token stored in AsyncStorage
+## Push policy
 
-## Development Commands
+Remote push is intentionally disabled until Senin.me owns the complete infrastructure. While disabled:
 
-```bash
-# Install dependencies
-yarn
+- no `push_url` is added to User API Key authorization,
+- Android Firebase modules are not native-autolinked,
+- the Android Firebase adapter must not statically import Firebase,
+- `POST_NOTIFICATIONS` is denied for both single and batched runtime permission requests,
+- notification/boot/vibrate manifest permissions introduced by push dependencies are removed,
+- the inherited iOS notification permission prompt is suppressed,
+- inherited background-fetch/local-notification fallback is disabled,
+- pending and delivered iOS notifications from older inherited runtimes are cleared and the badge is reset when the disabled-push policy installs,
+- `aps-environment` and remote-notification/background-fetch capabilities must not be reintroduced accidentally.
 
-# iOS setup
-bundle install
-cd ios && pod install && cd ..
+Push activation must be one reviewed change covering the Senin.me relay, Discourse allowlist, Firebase/APNs ownership, native linkage, permissions, signing/provisioning, background capabilities, tests, and store privacy disclosures.
 
-# Start Metro bundler
-npx react-native start
-
-# Run on iOS
-npx react-native run-ios
-
-# Run on Android
-npx react-native run-android
-
-# Run e2e tests
-npx detox build --configuration ios.sim.debug
-npx detox test --configuration ios.sim.debug
-
-# Lint
-yarn lint
-```
-
-## Build Configuration
-
-### iOS
-
-- **Min Deployment**: iOS 15.1
-- **Targets**: Main app + Share Extension
-- **Capabilities**: Push Notifications, Safari Web Auth, App Groups, Siri Shortcuts
+## Build and release identity
 
 ### Android
 
-- **Min SDK**: 26 (Android 8.0)
-- **Target SDK**: 35 (Android 15)
-- **Build**: Gradle with Kotlin DSL
+- Min SDK: 26
+- Target/compile SDK: 35
+- Application ID: `me.senin.mobile`
+- Gradle build files are Groovy-based in this repository.
+- Release signing values are passed at runtime; do not write secrets into `gradle.properties` or copy keystores into the repository.
 
-## Testing
+### iOS
 
-### E2E Tests (Detox)
+- Main bundle ID: `me.senin.mobile`
+- Share Extension: `me.senin.mobile.ShareExtension`
+- Automatic signing is used in the project; real device/TestFlight/App Store builds require the Senin.me-owned Apple Developer team.
+- `SENINME_IOS_TEAM_ID` is a signing/provisioning identity. It must not be substituted for the App Identifier Prefix used by AASA unless the production application identifier proves the values are identical.
+- Remote push entitlement stays absent until push activation.
+- Associated domains stay scoped to `senin.me`.
 
-Located in `e2e/`:
+See:
 
-- `onboarding.test.js` - Initial app flow tests
-- `topiclist.test.js` - Topic list functionality
+- `docs/ios-signing.md`
+- `docs/release.md`
+- `docs/domain-association.md`
+- `docs/privacy-release.md`
+- `docs/push.md`
+- `docs/SENINME_SETUP.md`
 
-### Test Configurations
+## Testing and formatting
 
-- iPhone 16 Pro simulator
-- iPad (10th generation) simulator
-- Android emulator
+Use repository-owned tool versions and commands:
 
-## Internationalization
+```bash
+yarn
+yarn eslint
+yarn prettier
+yarn test:unit
+```
 
-49 languages supported via JSON files in `js/locale/`. Uses `i18n-js` library.
+For iOS Detox:
 
-To add translations, edit the appropriate locale file (e.g., `js/locale/en.json`).
+```bash
+yarn detox build --configuration ios.sim.debug
+yarn detox test --configuration ios.sim.debug
+```
 
-## Common Tasks
+Current CI includes:
 
-### Adding a New Screen
+- Linting / Prettier
+- Jest
+- Android debug build
+- iOS Release-simulator Detox on iPhone 16 Pro and iPad (10th generation)
 
-1. Create screen component in `js/screens/NewScreen.js`
-2. Add to navigation in `js/Discourse.js`
-3. Create sub-components in `js/screens/NewScreenComponents/` if needed
+The iOS workflow intentionally skips intermediate stacked PRs whose base is not `main`. **A skipped stacked iOS run is not merge validation.**
 
-### Modifying API Calls
+## PR and CI discipline
 
-- Site-specific API calls go in `js/site.js`
-- Multi-site operations go in `js/site_manager.js`
-- Use `lib/fetch.js` wrapper for HTTP requests
+For the phased Senin.me stack:
 
-### Adding Platform-Specific Features
+- keep each feature PR narrowly scoped,
+- preserve earlier-phase fixes when synchronizing downstream branches,
+- after the parent phase merges, align the next PR with the latest `main`,
+- verify its diff still contains only the intended phase files,
+- trigger fresh workflows on the final exact PR head,
+- require Lint, Jest, Android Build, and real iPhone/iPad Detox success on that exact `main`-based head before merge,
+- do not treat checks from an older SHA, a temporary sync PR, or a stacked/skipped iOS run as sufficient,
+- use expected-head protection when merging so a moved PR head cannot be merged accidentally.
 
-1. Create `*.ios.js` and `*.android.js` files
-2. Export same interface from both
-3. Import without extension: `import X from './platforms/feature'`
+Temporary sync PRs are acceptable for non-destructive history alignment when they preserve feature scope. Close or merge them promptly so the open PR list remains clean.
 
-### Handling Notifications
+## Android E2E note
 
-Notification type routing is in `js/DiscourseUtils.js`. To add a new notification type:
+`.detoxrc.js` already contains Android configurations, but the current Android CI gate is a build-only gate. Do not claim Android device/emulator E2E coverage until the Detox Android instrumentation dependency/runner and emulator workflow are explicitly added and proven green.
 
-1. Add case to `getNotificationRoute()` function
-2. Add icon mapping to `getNotificationIcon()` function
+## Upstream maintenance
 
-## Code Style
+When syncing from upstream DiscourseMobile:
 
-- ESLint with React Native config
-- Prettier for formatting
-- No TypeScript (partial adoption in `tsconfig.json` but not enforced)
+- prefer upstream implementation where it does not violate Senin.me invariants,
+- reapply/verify the Senin.me isolation layer after conflict resolution,
+- search for resurrected Discourse identifiers, push relay URLs, multi-site entry points, and signing credentials,
+- rerun the complete exact-head CI matrix after the sync.
 
-## CI/CD
-
-### GitHub Actions
-
-- `linting.yml` - ESLint/Prettier checks on PRs
-- `ios-tests.yml` - Detox e2e tests on macOS
-
-### Fastlane
-
-- iOS/Android deployment automation
-- Certificate management via Match
+If an upstream change conflicts with a Senin.me security invariant, preserve the invariant and document the compatibility adjustment rather than silently restoring upstream behavior.
